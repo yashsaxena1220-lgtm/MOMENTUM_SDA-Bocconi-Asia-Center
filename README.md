@@ -152,18 +152,31 @@ Code: [MIT License](LICENSE). Data keeps its own licence: Synthea output (genera
 
 ## Run it yourself
 
-The quickest way is the hosted version: **https://breathetwin.streamlit.app** (it opens on any specific view too, e.g. https://breathetwin.streamlit.app/?page=Patient%20twin&pid=MOM-0198&day=2019-11-05).
+Three ways, from easiest to most hands-on. All of them use the data and model already in this repo.
 
-To run it on your own computer (needs Python 3.12 or newer from python.org):
+**1. In the browser, nothing to install**
+
+- Hosted version: **https://breathetwin.streamlit.app**
+- Or run it from this repo on GitHub's own computers: [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/yashsaxena1220-lgtm/MOMENTUM_SDA-Bocconi-Asia-Center?quickstart=1)
+  Click the button, then **Create codespace** (needs a free GitHub account). The first start takes about 3 to 5 minutes while it installs; the dashboard then opens by itself in a preview tab. If it does not, open the **Ports** tab and click the globe icon next to port 8501.
+
+**2. Download and double-click** (needs [Python 3.12 or newer](https://www.python.org/downloads/))
+
+1. Click the green **Code** button at the top of this page, then **Download ZIP**, and unzip it.
+2. Double-click the launcher for your computer:
+   - Windows: **`Open BreatheTwin.bat`**
+   - Mac: **`Open BreatheTwin (Mac).command`** (if macOS blocks it the first time: right-click it, choose **Open**, then **Open** again)
+   - Linux: `bash "Open BreatheTwin (Mac).command"`
+3. The first run installs the packages (a few minutes, once). The dashboard then opens at http://localhost:8501.
+
+**3. Command line** (needs Python 3.12 or newer)
 
 ```bash
 pip install -r requirements.txt
-streamlit run app/dashboard.py          # opens the dashboard at http://localhost:8501 on the included processed data
+streamlit run app/dashboard.py          # opens the dashboard at http://localhost:8501
 ```
 
-On Windows you can also double-click **`Open BreatheTwin.bat`**: it starts the dashboard if needed and opens it in the browser.
-
-To open a specific view directly, add it to the address, for example `http://localhost:8501/?page=Patient%20twin&pid=MOM-0198&day=2019-11-05`.
+Any version opens on a specific view if you add it to the address, for example `?page=Patient%20twin&pid=MOM-0198&day=2019-11-05`.
 
 To rebuild everything from the raw data (about 1 minute):
 
@@ -180,7 +193,9 @@ Optional extras for the rebuild:
 
 ```
 app/dashboard.py          dashboard (Streamlit)
-Open BreatheTwin.bat      Windows double-click launcher
+Open BreatheTwin.bat      Windows double-click launcher (installs packages on first run)
+Open BreatheTwin (Mac).command   Mac/Linux launcher
+.devcontainer/            one-click GitHub Codespaces setup
 src/config.py             every simulation setting with its source, cohort balance
 src/env_data.py           real air quality + weather -> environment_daily.csv
 src/ehr_synthea.py        Synthea records + India overlay + younger patients -> patients.csv

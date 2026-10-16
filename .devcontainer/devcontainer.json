@@ -1,0 +1,21 @@
+{
+  "name": "BreatheTwin (COPD digital twin)",
+  "image": "mcr.microsoft.com/devcontainers/python:3.13",
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["README.md"]
+    },
+    "vscode": {
+      "extensions": ["ms-python.python"]
+    }
+  },
+  "updateContentCommand": "sudo apt-get update && sudo apt-get install -y libgomp1 && pip install --user -r requirements.txt",
+  "postAttachCommand": "streamlit run app/dashboard.py --server.enableCORS false --server.enableXsrfProtection false",
+  "portsAttributes": {
+    "8501": {
+      "label": "BreatheTwin dashboard",
+      "onAutoForward": "openPreview"
+    }
+  },
+  "forwardPorts": [8501]
+}

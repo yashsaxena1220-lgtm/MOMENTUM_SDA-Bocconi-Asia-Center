@@ -6,3 +6,6 @@ data/raw/synthea_full/
 
 # internal working notes, not part of the submission
 CLAUDE.md
+
+# private Python environment created by the Mac/Linux launcher
+.venv/
