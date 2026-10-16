@@ -1,0 +1,13 @@
+measure,"MIMIC-IV demo (real, Boston ICU/hospital)",Our synthetic cohort (Synthea + India overlay)
+COPD patients,14.0,400.0
+Mean age,69.9,64.9
+Male %,50.0,50.7
+Hypertension %,42.9,34.2
+Diabetes %,64.3,18.2
+Ischemic heart disease %,42.9,44.2
+Heart failure %,57.1,2.0
+Anemia %,35.7,48.0
+Patients with a COPD exacerbation admission %,14.3,
+Median ICU heart rate,83.5,79.0
+Median ICU breathing rate,20.5,14.0
+Median ICU SpO2,96.0,

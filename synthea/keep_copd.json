@@ -1,0 +1,25 @@
+{
+  "name": "Keep COPD patients",
+  "remarks": ["Keeps only patients with an active COPD diagnosis from Synthea's COPD module."],
+  "states": {
+    "Initial": {
+      "type": "Initial",
+      "conditional_transition": [
+        {
+          "transition": "Keep",
+          "condition": {
+            "condition_type": "Or",
+            "conditions": [
+              {"condition_type": "Active Condition", "codes": [{"system": "SNOMED-CT", "code": "87433001", "display": "Pulmonary emphysema (disorder)"}]},
+              {"condition_type": "Active Condition", "codes": [{"system": "SNOMED-CT", "code": "185086009", "display": "Chronic obstructive bronchitis (disorder)"}]}
+            ]
+          }
+        },
+        {"transition": "Terminal"}
+      ]
+    },
+    "Keep": {"type": "Terminal"},
+    "Terminal": {"type": "Terminal"}
+  },
+  "gmf_version": 2
+}

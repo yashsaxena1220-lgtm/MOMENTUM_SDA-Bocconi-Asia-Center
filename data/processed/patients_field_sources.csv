@@ -1,0 +1,38 @@
+field,source
+age,Synthea (synthetic EHR)
+sex,Synthea (synthetic EHR)
+copd_type,Synthea (synthetic EHR)
+years_since_copd_diagnosis,Synthea (synthetic EHR)
+fev1_fvc,Synthea (synthetic EHR)
+fev1_fvc_readings,Synthea (synthetic EHR)
+lung_function_pct,Synthea (synthetic EHR)
+"gold_stage (stage shares set by overlay, ranked by Synthea lung function)",Synthea (synthetic EHR)
+bmi,Synthea (synthetic EHR)
+systolic_bp,Synthea (synthetic EHR)
+diastolic_bp,Synthea (synthetic EHR)
+heart_rate,Synthea (synthetic EHR)
+resp_rate,Synthea (synthetic EHR)
+hemoglobin,Synthea (synthetic EHR)
+smoking_status (a quarter of former set to current by overlay),Synthea (synthetic EHR)
+hypertension,Synthea (synthetic EHR)
+diabetes,Synthea (synthetic EHR)
+ischemic_heart_disease,Synthea (synthetic EHR)
+heart_failure,Synthea (synthetic EHR)
+anemia,Synthea (synthetic EHR)
+obesity,Synthea (synthetic EHR)
+home_oxygen,Synthea (synthetic EHR)
+all fields for the 100 patients aged 30-51 (record_source column),"India overlay (synthetic, ours)"
+display_name,"India overlay (synthetic, ours)"
+city,"India overlay (synthetic, ours)"
+region,"India overlay (synthetic, ours)"
+biomass_fuel_exposure,"India overlay (synthetic, ours)"
+tobacco_type,"India overlay (synthetic, ours)"
+frequent_exacerbator,"India overlay (synthetic, ours)"
+exacerbations_prior_year,"India overlay (synthetic, ours)"
+blood_eosinophils_per_ul,"India overlay (synthetic, ours)"
+serpina1_variant,"India overlay (synthetic, ours)"
+influenza_vaccinated,"India overlay (synthetic, ours)"
+adherence_habit,"India overlay (synthetic, ours)"
+pollution_sensitivity,"India overlay (synthetic, ours)"
+on_maintenance_inhaler,"India overlay (synthetic, ours)"
+on_rescue_inhaler,"India overlay (synthetic, ours)"

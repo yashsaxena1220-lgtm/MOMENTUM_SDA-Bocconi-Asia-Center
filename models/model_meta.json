@@ -1,0 +1,88 @@
+{
+  "features": [
+    "rr_dev1",
+    "rr_dev3",
+    "rr_z3",
+    "hr_dev1",
+    "hr_dev3",
+    "hr_z3",
+    "spo2_dev1",
+    "spo2_dev3",
+    "spo2_z3",
+    "steps_dev3",
+    "steps_z3",
+    "sleep_dev3",
+    "rescue_3d_vs_normal",
+    "adherence_7d",
+    "temp_drop_21d",
+    "temp_min_c",
+    "humidity_pct",
+    "humid_heat",
+    "age",
+    "gold_stage",
+    "exacerbations_prior_year",
+    "biomass_fuel_exposure",
+    "smoker_current",
+    "blood_eosinophils_per_ul",
+    "comorbidity_count",
+    "influenza_vaccinated",
+    "home_oxygen",
+    "bmi"
+  ],
+  "alert_threshold": 0.046002876932943554,
+  "pm_norm": 1.076391104342207,
+  "groups": {
+    "Breathing rate": [
+      "rr_dev1",
+      "rr_dev3",
+      "rr_z3"
+    ],
+    "Heart rate": [
+      "hr_dev1",
+      "hr_dev3",
+      "hr_z3"
+    ],
+    "Blood oxygen": [
+      "spo2_dev1",
+      "spo2_dev3",
+      "spo2_z3"
+    ],
+    "Activity": [
+      "steps_dev3",
+      "steps_z3"
+    ],
+    "Sleep": [
+      "sleep_dev3"
+    ],
+    "Rescue inhaler use": [
+      "rescue_3d_vs_normal"
+    ],
+    "Missed inhaler doses": [
+      "adherence_7d"
+    ],
+    "Air pollution (PM2.5)": [
+      "pm25",
+      "pm25_lag2_7"
+    ],
+    "Cold snap": [
+      "temp_drop_21d",
+      "temp_min_c"
+    ],
+    "Humidity / heat": [
+      "humidity_pct",
+      "humid_heat"
+    ],
+    "Clinical history": [
+      "age",
+      "gold_stage",
+      "exacerbations_prior_year",
+      "biomass_fuel_exposure",
+      "smoker_current",
+      "blood_eosinophils_per_ul",
+      "comorbidity_count",
+      "influenza_vaccinated",
+      "home_oxygen",
+      "bmi"
+    ]
+  }
+}

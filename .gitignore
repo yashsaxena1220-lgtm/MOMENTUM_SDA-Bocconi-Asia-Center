@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+data/raw/mimic*.zip
+data/raw/synthea_full/
+.DS_Store
+
+# internal working notes, not part of the submission
+CLAUDE.md

@@ -1,0 +1,50 @@
+{
+  "task": "Predict whether a COPD flare-up starts in the next 1-3 days",
+  "patients_train": 280,
+  "patients_test": 120,
+  "patient_days_test": 39518,
+  "positive_rate_test": 0.0084,
+  "auroc": 0.8,
+  "auprc": 0.24,
+  "alert_threshold": 0.046,
+  "flare_ups_warned_in_advance": 0.655,
+  "false_alerts_per_patient_month": 0.8,
+  "single_stream_ablation": {
+    "Health record only": {
+      "auroc": 0.659,
+      "auprc": 0.016
+    },
+    "Environment only": {
+      "auroc": 0.452,
+      "auprc": 0.008
+    },
+    "Wearables only": {
+      "auroc": 0.791,
+      "auprc": 0.233
+    },
+    "Wearables + health record": {
+      "auroc": 0.805,
+      "auprc": 0.249
+    },
+    "All three streams (twin)": {
+      "auroc": 0.8,
+      "auprc": 0.24
+    }
+  },
+  "trigger_group_importance_pct": {
+    "Clinical history": 32.1,
+    "Blood oxygen": 14.5,
+    "Breathing rate": 12.4,
+    "Rescue inhaler use": 10.7,
+    "Heart rate": 9.9,
+    "Cold snap": 6.3,
+    "Activity": 5.4,
+    "Missed inhaler doses": 2.7,
+    "Air pollution (PM2.5)": 2.2,
+    "Humidity / heat": 2.0,
+    "Sleep": 1.8
+  },
+  "pm25_method": "Published dose-response (DeVries 2017) applied on the odds scale; not learned by the model.",
+  "published_benchmark": "Real-world studies report AUROC 0.68 (Shah 2017) to 0.85 (Hurst 2010).",
+  "caveat": "Measured on simulated data; reflects the simulator's assumptions, not clinical accuracy."
+}
