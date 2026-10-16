@@ -10,4 +10,3 @@ font = "sans serif"
 headless = true
 
 runOnSave = true
-port = 8501
