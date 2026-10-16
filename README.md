@@ -158,7 +158,10 @@ Three ways, from easiest to most hands-on. All of them use the data and model al
 
 - Hosted version: **https://breathetwin.streamlit.app**
 - Or run it from this repo on GitHub's own computers: [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/yashsaxena1220-lgtm/MOMENTUM_SDA-Bocconi-Asia-Center?quickstart=1)
-  Click the button, then **Create codespace** (needs a free GitHub account). The first start takes about 3 to 5 minutes while it installs; the dashboard then opens by itself in a preview tab. If it does not, open the **Ports** tab and click the globe icon next to port 8501.
+  Click the button, then **Create new codespace** (needs a free GitHub account). Then:
+  1. If VS Code asks *"Do you trust the authors of the files in this folder?"*, click **Trust Folder & Continue**.
+  2. Wait about 3 minutes while it installs, until the terminal shows `Local URL: http://localhost:8501`.
+  3. Open the **Ports** tab at the bottom and click the globe icon next to port **8501**. The dashboard opens in a new browser tab.
 
 **2. Download and double-click** (needs [Python 3.12 or newer](https://www.python.org/downloads/))
 
