@@ -96,7 +96,7 @@ Health-record factors are rescaled so each GOLD stage keeps its published averag
 
 ## Technical stack
 
-- Python 3.11+, pandas, NumPy
+- Python 3.12 or newer, pandas, NumPy
 - LightGBM (gradient-boosted trees) and scikit-learn
 - Streamlit and Plotly for the dashboard
 - Synthea v4 (Java) for synthetic health records
@@ -154,7 +154,7 @@ Code: [MIT License](LICENSE). Data keeps its own licence: Synthea output (genera
 
 The quickest way is the hosted version: **https://breathetwin.streamlit.app** (it opens on any specific view too, e.g. https://breathetwin.streamlit.app/?page=Patient%20twin&pid=MOM-0198&day=2019-11-05).
 
-To run it on your own computer:
+To run it on your own computer (needs Python 3.12 or newer from python.org):
 
 ```bash
 pip install -r requirements.txt
