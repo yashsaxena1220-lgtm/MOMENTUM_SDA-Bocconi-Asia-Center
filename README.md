@@ -18,9 +18,7 @@ A digital twin of a COPD patient that learns the patient's own normal, watches t
 
 ## College / incubator information
 
-SDA Bocconi Asia Center, Mumbai (MBA, IMB9, Class of 2026-28)
-
-> TODO before submission: confirm Anushka's college/programme.
+Both team members: SDA Bocconi Asia Center, Mumbai (MBA, IMB9, Class of 2026-28)
 
 ## Project title
 

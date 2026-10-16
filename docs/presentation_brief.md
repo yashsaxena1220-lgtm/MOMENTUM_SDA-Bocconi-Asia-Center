@@ -7,7 +7,7 @@ All numbers below are current as of 15 Oct 2026.
 - Digital Twin Challenge 2026 by Happiest Health (on Unstop). Submission closes 20 Oct 2026, 7 PM IST.
 - Brief: a proof-of-concept digital twin for one chronic condition common in India. It must combine static health records (EHR) with dynamic wearable/IoT time series, predict an adverse event, and show a doctor-facing dashboard. Only anonymised, open-source or synthetic data.
 - The submission needs a presentation (PDF or PPT) and a separate architecture diagram (PDF or PPT), plus a 15-20 min demo video.
-- Team: MOMENTUM. Anushka Tomar (team leader) and Yash Saxena, SDA Bocconi Asia Center, Mumbai (MBA, IMB9, Class of 2026-28). Confirm Anushka's college/programme before submitting.
+- Team: MOMENTUM. Anushka Tomar (team leader) and Yash Saxena, SDA Bocconi Asia Center, Mumbai (MBA, IMB9, Class of 2026-28).
 - Neither team member codes: keep the slides in plain language.
 
 ## Writing style for the deck
