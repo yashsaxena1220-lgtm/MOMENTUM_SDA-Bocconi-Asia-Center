@@ -20,6 +20,7 @@ from simulate import env_multipliers, simulate_patient  # noqa: E402
 from engine import load as load_engine  # noqa: E402
 from advisories import all_cities, summarise, outlook, SEEK_CARE  # noqa: E402
 from visit_summary import build_summary_html  # noqa: E402
+from devices import SIGNALS, DEVICES, KITS  # noqa: E402
 
 st.set_page_config(page_title="BreatheTwin | COPD digital twin", page_icon="🫁", layout="wide",
                    initial_sidebar_state="expanded")
@@ -300,7 +301,7 @@ OTHER_CITIES = {"Jaipur": (26.91, 75.79), "Ahmedabad": (23.02, 72.57), "Pune": (
 st.sidebar.markdown(f"<h2 style='margin:0'>BreatheTwin</h2><div class='muted'>COPD digital twin · Team MOMENTUM</div>",
                     unsafe_allow_html=True)
 PAGE_LABEL = {"Command centre": "Overview: all patients", "Patient twin": "One patient in detail",
-              "Twin Lab (what-if)": "What-if lab", "Add a patient": "Check a new person", "Model and evidence": "How it works"}
+              "Twin Lab (what-if)": "What-if lab", "Add a patient": "Check a new person", "Devices": "Devices and sensors", "Model and evidence": "How it works"}
 st.sidebar.markdown("<p class='muted' style='margin-top:0.4rem'>Warns doctors and families 1 to 3 days before a COPD "
                     "flare-up, explains why, and shows what would lower the risk.</p>", unsafe_allow_html=True)
 QP = st.query_params
@@ -329,7 +330,8 @@ with st.sidebar.expander("Medical words explained"):
     for k, v in GLOSSARY.items():
         st.markdown(f"**{k}**: {v}")
 st.sidebar.markdown("<p class='muted' style='margin-top:1rem'>Air quality (CPCB) and weather (Open-Meteo) are real. "
-                    "Patients come from Synthea; watch readings and flare-ups are simulated from published studies.</p>",
+                    "Patients come from Synthea; watch readings and flare-ups are simulated from published studies. "
+                    "The twin is stress-tested on 100 real de-identified hospital patients (MIMIC-III demo).</p>",
                     unsafe_allow_html=True)
 pid = st.session_state.pid
 
@@ -898,6 +900,61 @@ elif page == "Add a patient":
         s2.plotly_chart(signal_chart(f, "spo2_pct", "spo2_normal", "Blood oxygen %", 1.0), use_container_width=True)
 
 
+# ================================================================== DEVICES AND SENSORS
+elif page == "Devices":
+    band("Devices and sensors", "Which wearables and home IoT devices feed the twin, and which sensor measures what")
+    howto("What this page shows", [
+        "<b>No needle, no blood test, nothing under the skin.</b> Every daily reading comes from a watch, a clip-on finger "
+        "sensor or an inhaler add-on. Air and weather come from city sensor networks, so the patient wears nothing for those.",
+        "The first table maps each signal the twin reads to the sensor that measures it and the part of the model it feeds.",
+        "The second table lists devices sold in India that can supply those signals, and how their data reaches BreatheTwin.",
+        "Honest note: in this prototype the watch, oximeter and inhaler readings are simulated or typed in; the device links "
+        "below are the integration plan using each platform's published data interface. Air and weather data are already real.",
+    ])
+    st.markdown("### Three ways to equip a patient")
+    kc = st.columns(3)
+    for col, (name, kit, gives) in zip(kc, KITS):
+        col.markdown(f"<div class='card' style='height:100%'><b style='color:{TEAL}'>{name}</b><br>{kit}"
+                     f"<div class='muted' style='margin-top:0.4rem'>{gives}</div></div>", unsafe_allow_html=True)
+
+    st.markdown("### Which sensor tracks which signal")
+    sig = pd.DataFrame(SIGNALS, columns=["Signal", "Sensor that measures it", "Device", "How often", "How the twin uses it"])
+    st.table(sig.set_index("Signal"))
+
+    st.markdown("### Coverage at a glance")
+    cats = ["Heart rate", "Breathing rate", "SpO2", "Steps", "Sleep", "Rescue puffs", "Controller doses", "Blood pressure"]
+    cover = {
+        "Fitbit / Apple / Galaxy / Garmin watch": [1, 1, 1, 1, 1, 0, 0, 0],
+        "Budget watch (Noise, boAt, Amazfit)": [1, 0.5, 0.5, 1, 1, 0, 0, 0],
+        "Fingertip or ring pulse oximeter": [1, 0, 1, 0, 0, 0, 0, 0],
+        "Smart inhaler add-on (ADHERO, Propeller)": [0, 0, 0, 0, 0, 1, 1, 0],
+        "Bluetooth BP monitor (Omron)": [1, 0, 0, 0, 0, 0, 0, 1],
+        "Phone only (typed in)": [0, 0, 0, 1, 0, 0.5, 0.5, 0],
+    }
+    z = np.array(list(cover.values()))
+    txt = np.where(z == 1, "✓", np.where(z == 0.5, "partial", ""))
+    fig = go.Figure(go.Heatmap(z=z, x=cats, y=list(cover), text=txt, texttemplate="%{text}", textfont=dict(size=15, color="white"), showscale=False,
+                               colorscale=[[0, "#F4F7F9"], [0.5, "#79A6B7"], [1, TEAL]], xgap=3, ygap=3, hoverinfo="skip"))
+    base_layout(fig, 330)
+    fig.update_yaxes(autorange="reversed")
+    fig.update_xaxes(side="top")
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("### Compatible devices")
+    dev = pd.DataFrame(DEVICES, columns=["Type", "Examples", "Signals it gives the twin", "How the data reaches BreatheTwin", "Cost", "Note"])
+    st.table(dev.set_index("Type"))
+
+    st.markdown("### How a reading travels to the doctor")
+    st.markdown(f"""<div class='card'>
+    <b>Sensor</b> (watch, oximeter, inhaler clip) → <b>Bluetooth</b> → <b>patient's phone app</b> →
+    <b>Android Health Connect / Apple HealthKit / vendor API</b> → <b>BreatheTwin</b> builds one daily summary per patient
+    (resting heart rate, night breathing rate, morning SpO2, steps, sleep, puffs, doses) → compares it with the patient's own
+    normal → <b>risk, reasons and advice</b> on the doctor's overview the same morning.<br>
+    <span class='muted'>If a sensor is missing on a day, that reading stays empty and the twin works with the rest; it never treats a
+    missing oxygen reading as zero. A family without a watch can type the oximeter number and a 30-second breathing count on the
+    "Check a new person" page.</span></div>""", unsafe_allow_html=True)
+
+
 # ================================================================== MODEL AND EVIDENCE
 else:
     band("How it works", "How the twin was built, how well it performs on unseen patients, and where every number comes from")
@@ -929,12 +986,67 @@ else:
     base_layout(fig, 300, "Share of the twin's reasoning by trigger")
     rgt.plotly_chart(fig, use_container_width=True)
 
-    st.markdown("### Architecture")
-    st.markdown(f"""<div class='card'>
-    <b>1. Health record</b> (Synthea COPD cohort + India overlay) &nbsp;+&nbsp; <b>2. Wearables and smart inhaler</b> (daily) &nbsp;+&nbsp;
-    <b>3. City air and weather</b> (CPCB, Open-Meteo)<br>→ <b>Personal baseline</b>: each signal compared with the patient's own last 4 weeks<br>
-    → <b>Hybrid risk engine</b>: LightGBM on body signals, inhaler, weather and record × published PM2.5 dose-response<br>
-    → <b>Doctor outputs</b>: ranked alerts, trigger explanations, rule checks, what-if Twin Lab</div>""", unsafe_allow_html=True)
+    st.markdown("### How the twin works (flowchart)")
+    st.image(str(ROOT / "docs" / "flowchart.png"), use_container_width=True)
+
+    st.markdown("### How much of the data is real")
+    st.dataframe(pd.DataFrame([
+        ["City air quality (PM2.5, AQI)", "Real", "2,928 city-days, 8 cities, CPCB stations (1 missing day filled)", "Training and dashboard"],
+        ["Weather (temperature, humidity)", "Real", "2,928 city-days, Open-Meteo archive", "Training and dashboard"],
+        ["Health records", "Synthetic", "400 patients: 300 Synthea + 100 India overlay", "Training and dashboard"],
+        ["Watch, oximeter and inhaler readings", "Synthetic", "146,400 patient-days, simulated from published studies", "Training and dashboard"],
+        ["Flare-ups", "Synthetic", "473 simulated events", "Training labels"],
+        ["Real hospital patients (stress test)", "Real", "100 de-identified ICU patients, 47,214 vital-sign readings (MIMIC-III demo)", "Testing only, never training"],
+        ["Real hospital patients (record check)", "Real", "14 COPD patients (MIMIC-IV demo), aggregate comparison", "Testing only"],
+    ], columns=["Data", "Real or synthetic", "Size", "Used for"]), hide_index=True, use_container_width=True)
+    st.markdown("<p class='muted'>By volume, about 1% of the values the model learned from are real (all of the environment); "
+                "everything about the patients is simulated. That is why the twin is stress-tested on real patients below.</p>",
+                unsafe_allow_html=True)
+
+    st.markdown("### Stress test on 100 real patients")
+    stp = OUTPUTS / "stress_test_summary.json"
+    if stp.exists():
+        stt = json.load(open(stp))
+        howto("What the stress test checks", [
+            f"{stt['real_patients']} real, de-identified hospital patients ({stt['sex_mix'].get('Female', 0)} women, "
+            f"{stt['sex_mix'].get('Male', 0)} men, aged 18 to 90) from the open MIMIC-III demo. The twin never saw them while learning.",
+            "Their real record (COPD, heart disease, diabetes, smoking, home oxygen) and real heart rate, breathing rate and SpO2 "
+            "go through the same route as the 'Check a new person' page: usual = first 24 h in hospital, now = hours 24 to 48.",
+            "Air and weather are held fixed for everyone, so any difference comes from the real person, not the city.",
+            stt["caveat"],
+        ])
+        c = st.columns(4)
+        kpi(c[0], f"{stt['assessed']}/{stt['real_patients']}", "Real patients assessed", f"{stt['skipped_short_stay']} had under 48 h of vitals")
+        kpi(c[1], stt["errors"] + stt["invalid_outputs"], "Crashes or invalid risks", "missing and extreme readings included")
+        kpi(c[2], stt["spearman_risk_vs_worsening_signs"], "Risk vs real worsening signs (rank correlation)", "risk rises as real signs worsen")
+        kpi(c[3], "Yes" if stt["edge_cases_direction_correct"] else "No", "Worse readings always raise risk", "edge-case suite")
+        l, rgt = st.columns(2)
+        bs = pd.DataFrame(stt["by_sex"]).rename(columns={"sex": "Group"})
+        ba = pd.DataFrame(stt["by_age_group"]).rename(columns={"age_group": "Group"})
+        tab = pd.concat([bs, ba])[["Group", "patients", "median_risk", "alert_rate", "worsening_rate"]]
+        tab.columns = ["Group", "Patients", "Median risk", "Share alerted", "Avg. worsening signs"]
+        l.markdown("**By sex and age group**")
+        l.dataframe(tab, hide_index=True, use_container_width=True)
+        ss = pd.DataFrame(stt["by_sex_same_warning_signs"])
+        ss.columns = ["Warning signs", "Women", "Women alerted", "Men", "Men alerted"]
+        ss = ss.astype(object).where(ss.notna(), "-")
+        rgt.markdown("**Like for like: share alerted by sex, same number of warning signs**")
+        rgt.dataframe(ss, hide_index=True, use_container_width=True)
+        rgt.markdown("**Edge cases on one real patient**")
+        rgt.dataframe(pd.DataFrame(stt["edge_cases"])[["case", "risk", "level", "rule_checks"]].rename(
+            columns={"case": "Case", "risk": "Risk", "level": "Level", "rule_checks": "Rule checks fired"}), hide_index=True, use_container_width=True)
+        l.markdown("**Real vs simulated vital signs**")
+        rl = pd.DataFrame(stt["realism"])
+        rl.columns = ["Signal", "Real ICU patients", "Simulated cohort"]
+        l.dataframe(rl, hide_index=True, use_container_width=True)
+        l.caption("Real hospital patients breathe faster and often get extra oxygen, so their SpO2 reads higher than the simulated home cohort.")
+        st.markdown(f"""<div class='card'><b>What we learned</b><ul style='margin:0.3rem 0 0 0'>
+        <li>The twin ran on every real patient with enough data, with no crash and no impossible output, including a missing oxygen sensor.</li>
+        <li>Risk rises with real deterioration (rank correlation {stt['spearman_risk_vs_worsening_signs']}). Age 18 vs 90 and switching sex change risk very little; sex is not a model input.</li>
+        <li>With the same number of warning signs, women were alerted somewhat more often than men; groups are small (5 to 19 people), so this needs a larger real cohort.</li>
+        <li>An oxygen drop alone barely moves the learned risk; the rule layer still flags it as urgent. A clinical version should weight SpO2 more.</li>
+        <li>Risk did not predict later in-hospital death (AUROC {stt['auroc_risk_for_later_in_hospital_death']}); death in intensive care is a different event from a COPD flare-up at home.</li>
+        </ul></div>""", unsafe_allow_html=True)
 
     st.markdown("### Real-data check: MIMIC-IV demo vs our synthetic cohort")
     mimic = pd.read_csv(OUTPUTS / "mimic_demo_check.csv")
@@ -943,6 +1055,7 @@ else:
     st.dataframe(pd.DataFrame([
         ["Health records", "Synthea COPD cohort (synthetic) + India overlay (synthetic, ours)", "Apache 2.0 / public domain"],
         ["Real hospital check", "MIMIC-IV Clinical Database Demo v2.2, 100 de-identified patients", "ODbL 1.0"],
+        ["Real-patient stress test", "MIMIC-III Clinical Database Demo v1.4, 100 de-identified ICU patients", "ODbL 1.0"],
         ["Air quality", "CPCB daily city data via Kaggle 'Air Quality Data in India (2015-2020)'", "CC0"],
         ["Weather", "Open-Meteo historical weather archive", "CC BY 4.0"],
         ["Watch readings and flare-ups", "Simulated, calibrated to published studies", "Ours"],

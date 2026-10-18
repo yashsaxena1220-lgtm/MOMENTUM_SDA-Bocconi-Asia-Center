@@ -57,13 +57,72 @@ The dashboard is written for non-medical users too: every page opens with a shor
 | **One patient in detail** | Risk dial, today's readings against own normal, safety checks, what would lower the risk, full health record (EHR), what is pushing the risk, 90-day history, next-3-days advice, downloadable visit summary |
 | **What-if lab** | One-click scenarios (smog week, cold snap, stopped inhaler, early warning signs, perfect week) and sliders for body signals, inhaler use, air, weather and the health record |
 | **Check a new person** | Enter the record plus usual and current readings (and optionally today's PM2.5 from an AQI app); see the risk, reasons and every value the twin used |
-| **How it works** | Accuracy, data sources and licences, every simulation setting with its source, real-data check |
+| **Devices and sensors** | Which wearables and home IoT devices feed the twin, which sensor measures which signal, three patient kits, and how a reading travels to the doctor |
+| **How it works** | Flowchart, accuracy, how much data is real, the stress test on 100 real patients, data sources and licences, every simulation setting with its source |
 
 | | |
 |---|---|
 | ![Overview](docs/screenshots/1_overview.png) | ![What-if lab](docs/screenshots/4_what_if_lab.png) |
 | ![Health record](docs/screenshots/3_health_record.png) | ![Smog warnings](docs/screenshots/6_smog_warnings.png) |
 | ![Check a new person](docs/screenshots/5_check_new_person.png) | ![Visit summary](docs/screenshots/7_visit_summary.png) |
+| ![Devices and sensors](docs/screenshots/9_devices.png) | ![Stress test on real patients](docs/screenshots/10_stress_test.png) |
+
+## Functioning flowchart
+
+![BreatheTwin flowchart](docs/flowchart.png)
+
+Every morning, for every patient (PDF: [`docs/flowchart.pdf`](docs/flowchart.pdf)):
+
+1. **Collect** three streams: wearables and home IoT (watch, pulse oximeter, smart inhaler clip), the health record, and the city's real air quality and weather.
+2. **Clean** them into one row per patient per day, with unit and range checks. A missing sensor stays missing; it is never read as zero.
+3. **Twin**: compare today and the last 3 days with the patient's own normal (days t-28 to t-8). The hybrid risk engine scores the risk of a flare-up in the next 1 to 3 days, and transparent rule checks run alongside.
+4. **Decide**: High (call the patient today), Medium (watch closely) or Low (no action).
+5. **Act**: the ranked call list, the reasons, what would lower the risk, smog and cold alerts, and a printable visit summary. The doctor, nurse or ASHA worker acts, the outcome is recorded, and the baseline updates the next day.
+
+## Wearables and IoT devices it works with
+
+No needle, no blood test, nothing under the skin. Every daily reading comes from a watch, a clip-on finger sensor or an inhaler add-on; air and weather come from city sensor networks.
+
+**Which sensor tracks which signal**
+
+| Signal | Sensor | Devices | How often | How the twin uses it |
+|---|---|---|---|---|
+| Resting heart rate | Optical heart-rate sensor (green-light PPG) | Any smartwatch or band; pulse oximeter | Daily resting value | Change vs own normal |
+| Breathing rate | PPG + motion sensor, during sleep | Fitbit, Apple Watch, Galaxy Watch, Garmin | Nightly average | Change vs own normal |
+| Blood oxygen (SpO2) | Red and infrared light (pulse oximetry) | Fingertip or ring oximeter; many watches | Morning or overnight | Change vs own normal; urgent below 90% |
+| Steps / activity | 3-axis accelerometer | Watch, band or phone | Daily total | Change vs own normal |
+| Sleep hours | Accelerometer + heart-rate pattern | Watch or band | Nightly | Change vs own normal |
+| Rescue inhaler puffs | Actuation sensor in a clip-on inhaler add-on | ADHERO (Lupin + Aptar, India), Propeller, Hailie; or one tap in the app | Every puff | Puffs vs own normal |
+| Controller doses | Same clip-on sensor | Same, or one tap in the app | Every dose | Share taken in 7 days |
+| Blood pressure | Cuff pressure sensor (oscillometric) | Omron Bluetooth monitor | Weekly or when unwell | Shown to the doctor; not yet a risk input |
+| PM2.5 / AQI | CPCB continuous monitoring stations | City network, read by API | Daily | Published dose-response; smog warnings |
+| Temperature, humidity | Weather stations and reanalysis | Open-Meteo API | Daily | Cold-snap and humid-heat triggers |
+
+**Three ways to equip a patient**
+
+| Kit | What it is | What it gives |
+|---|---|---|
+| Minimum | Any smartwatch or band that syncs to Android Health Connect or Apple Health + a fingertip pulse oximeter | Heart rate, breathing rate, SpO2, steps, sleep; inhaler use with one tap |
+| Full | Minimum + smart inhaler add-on (e.g. ADHERO) + Bluetooth BP monitor | Automatic inhaler tracking and blood pressure |
+| No-watch | Phone + fingertip oximeter, readings typed in | SpO2, pulse, steps and a 30-second breathing count; near-zero cost |
+
+**How a reading travels:** sensor → Bluetooth → patient's phone app → Health Connect / HealthKit / vendor API (Fitbit Web API, Garmin Health API, OMRON connect) → BreatheTwin daily summary → risk on the doctor's overview the same morning.
+
+Honest note: in this prototype the watch, oximeter and inhaler readings are simulated (or typed in on the "Check a new person" page). The device connections above are the integration plan through each platform's published data interface; air quality and weather are already real. The full device list is in [`src/devices.py`](src/devices.py) and on the dashboard's **Devices and sensors** page.
+
+## How much of the data is real
+
+| Data | Real or synthetic | Size | Used for |
+|---|---|---|---|
+| City air quality (PM2.5, AQI) | **Real** | 2,928 city-days, 8 cities, CPCB (1 missing day filled) | Training and dashboard |
+| Weather (temperature, humidity) | **Real** | 2,928 city-days, Open-Meteo | Training and dashboard |
+| Health records | Synthetic | 400 patients (300 Synthea + 100 India overlay) | Training and dashboard |
+| Watch, oximeter and inhaler readings | Synthetic | 146,400 patient-days | Training and dashboard |
+| Flare-ups | Synthetic | 473 events | Training labels |
+| Real hospital patients (stress test) | **Real** | 100 de-identified ICU patients, 47,214 vital-sign readings (MIMIC-III demo) | Testing only, never training |
+| Real COPD records (record check) | **Real** | 14 COPD patients (MIMIC-IV demo), aggregate comparison | Testing only |
+
+All of the environment is real; everything about the training patients is simulated. By volume, about 1% of the values the model learned from are real. That is why we added the stress test below.
 
 ## How it works
 
@@ -77,6 +136,7 @@ The prototype fuses three data streams. The brief asks for two; we add the envir
 | Dynamic: environment | Daily PM2.5 and AQI for 8 cities | CPCB data via [Kaggle "Air Quality Data in India"](https://www.kaggle.com/datasets/rohanrao/air-quality-data-in-india) (CC0) | **Real** |
 | Dynamic: weather | Daily mean and minimum temperature, humidity | [Open-Meteo historical archive](https://open-meteo.com/) (CC BY 4.0) | **Real** |
 | Real-data check | 100 de-identified hospital patients, 14 with COPD | [MIMIC-IV Clinical Database Demo v2.2](https://physionet.org/content/mimic-iv-demo/2.2/) (ODbL 1.0) | **Real** |
+| Real-patient stress test | 100 de-identified ICU patients (55 women, 45 men, aged 18-90), 16 with COPD, 47,214 real vital-sign readings | [MIMIC-III Clinical Database Demo v1.4](https://physionet.org/content/mimiciii-demo/1.4/) (ODbL 1.0), extract in [`data/raw/mimic3_demo/`](data/raw/mimic3_demo/) | **Real** |
 
 **The cohort (400 patients).** Every adult generation is represented: 40 aged 30-39, 49 aged 40-49, 62 aged 50-59, 67 aged 60-69, 79 aged 70-79 and 103 aged 80+. Synthea's lung-function value alone would make two thirds of patients GOLD 4, so we keep Synthea's ordering of who is sicker but assign stages in typical clinic shares: GOLD 1/2/3/4 = 17% / 42% / 29% / 12%. 18% currently smoke and 31% are exposed to cooking smoke at home.
 
@@ -134,13 +194,29 @@ What each data stream adds (AUROC): health record alone 0.66, environment alone 
 
 The record-mapping code runs on the real MIMIC-IV demo and finds 14 COPD patients. Comparing them with our synthetic cohort ([`outputs/mimic_demo_check.csv`](outputs/mimic_demo_check.csv)) shows where synthetic records differ from real ones. Sex mix (50% vs 51% male) and ischaemic heart disease (43% vs 44%) match well. Heart failure (57% vs 2%) and diabetes (64% vs 18%) do not: real hospital COPD patients are sicker than synthetic ones. Only aggregate numbers are saved.
 
+### Stress test on 100 real patients (MIMIC-III demo)
+
+The twin was trained only on simulated patients, so we fed it 100 real, de-identified hospital patients it has never seen: 55 women and 45 men, aged 18 to 90, 16 with COPD, from the open [MIMIC-III Clinical Database Demo](https://physionet.org/content/mimiciii-demo/1.4/) (ODbL 1.0). Their real health record (COPD, heart disease, heart failure, diabetes, anaemia, smoking, home oxygen) and real heart rate, breathing rate and SpO2 go in the same way as the dashboard's "Check a new person" page: usual readings = median of the first 24 h in hospital, readings now = median of hours 24 to 48. Air and weather are held fixed for everyone, so any difference comes from the person. Script: [`src/stress_test_real.py`](src/stress_test_real.py); results: [`outputs/stress_test_summary.json`](outputs/stress_test_summary.json) and [`outputs/stress_test_real.csv`](outputs/stress_test_real.csv).
+
+| Check | Result |
+|---|---|
+| Robustness | 75 of 100 assessed (25 had under 48 h of vitals); 0 crashes, 0 invalid risks, including a missing oxygen sensor |
+| Signal direction | Risk rises with real worsening signs (rank correlation 0.71); in the edge-case suite, breathing at 35/min gives High risk and all three signs worse gives 96% |
+| Age and sex | Age 18 vs 90 and switching sex barely change risk (sex is not a model input). Women alerted 30%, men 19%; women also showed more warning signs |
+| Like for like | With the same number of warning signs, women were alerted somewhat more often than men; groups are 5 to 19 people, so this needs a larger real cohort |
+| Realism | Real ICU patients breathe faster (median 19 vs 15.4/min) and often get extra oxygen (SpO2 98% vs 95.2%) than our simulated home cohort |
+| Found to fix | An SpO2 drop alone barely moves the learned risk (the rule layer still flags it urgent); a clinical version should weight oxygen more |
+| Limit | Risk did not predict later in-hospital death (AUROC 0.49); death in intensive care is a different event from a COPD flare-up at home |
+
+This is a stress test of robustness, fairness and the direction of the signal on real people, not clinical validation.
+
 ## Demo video
 
 > TODO: add unlisted YouTube link (15-20 minutes).
 
 ## Architecture diagram
 
-[`docs/architecture.pdf`](docs/architecture.pdf)
+[`docs/architecture.pdf`](docs/architecture.pdf) · functioning flowchart: [`docs/flowchart.pdf`](docs/flowchart.pdf) (also shown [above](#functioning-flowchart))
 
 ## Presentation
 
@@ -211,15 +287,20 @@ src/twin.py               risk, reasons, rule checks, what-if
 src/advisories.py         smog and cold warnings with advice
 src/visit_summary.py      printable one-page visit summary
 src/mimic_demo.py         real-data check on MIMIC-IV demo
+src/stress_test_real.py   stress test on 100 real MIMIC-III demo patients (age and sex diversity)
+src/devices.py            compatible wearables and IoT devices, and which sensor gives which signal
+src/flowchart.py          draws docs/flowchart.png / .pdf
 synthea/                  keep-file and exact Synthea command
-data/raw, data/processed  inputs and generated tables
+data/raw, data/processed  inputs and generated tables (data/raw/mimic3_demo: real de-identified patients, ODbL)
 outputs/                  metrics and charts
-docs/                     presentation, architecture diagram, screenshots
+docs/                     presentation, flowchart, architecture diagram, screenshots
 ```
 
 ## Limitations
 
-- Wearable readings and flare-ups are simulated; the model has not seen a real COPD patient's watch data.
+- Wearable readings and flare-ups are simulated; the model has not seen a real COPD patient's watch data. It has been stress-tested on 100 real hospital patients, which checks robustness and direction, not accuracy.
+- Device connections (Health Connect, HealthKit, Fitbit, Garmin, OMRON, ADHERO) are designed but not yet built; readings are simulated or typed in.
+- An oxygen drop on its own moves the learned risk too little (found in the stress test); the rule layer covers it for now.
 - Synthea's COPD cohort is US-based; the India overlay, the younger patients and the stage shares are our assumptions.
 - No India-specific effect size linking PM2.5 to COPD flare-ups was found; the 2.5% per 10 µg/m³ figure is a global meta-analysis.
 - Cooking smoke, age, other conditions, low BMI, humidity, sleep and missed-dose effects have no published effect size and are marked as assumptions.

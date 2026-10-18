@@ -1,0 +1,204 @@
+{
+  "dataset": "MIMIC-III Clinical Database Demo v1.4 (PhysioNet, ODbL 1.0), 100 de-identified ICU patients, Beth Israel Deaconess Medical Center, Boston",
+  "real_patients": 100,
+  "real_vital_readings": 47214,
+  "assessed": 75,
+  "skipped_short_stay": 25,
+  "errors": 0,
+  "invalid_outputs": 0,
+  "sex_mix": {
+    "Female": 55,
+    "Male": 45
+  },
+  "age_mix": {
+    "18-39": 5,
+    "40-49": 7,
+    "50-59": 8,
+    "60-69": 11,
+    "70-79": 25,
+    "80+": 43
+  },
+  "copd_patients": 16,
+  "copd_assessed": 11,
+  "risk_range": [
+    0.0,
+    0.974
+  ],
+  "by_sex": [
+    {
+      "sex": "Female",
+      "patients": 44,
+      "median_risk": 0.009,
+      "alert_rate": 0.3,
+      "worsening_rate": 0.73
+    },
+    {
+      "sex": "Male",
+      "patients": 31,
+      "median_risk": 0.006,
+      "alert_rate": 0.19,
+      "worsening_rate": 0.65
+    }
+  ],
+  "by_age_group": [
+    {
+      "age_group": "18-39",
+      "patients": 2,
+      "median_risk": 0.202,
+      "alert_rate": 0.5,
+      "worsening_rate": 1.0
+    },
+    {
+      "age_group": "40-49",
+      "patients": 6,
+      "median_risk": 0.006,
+      "alert_rate": 0.17,
+      "worsening_rate": 0.5
+    },
+    {
+      "age_group": "50-59",
+      "patients": 7,
+      "median_risk": 0.006,
+      "alert_rate": 0.29,
+      "worsening_rate": 0.57
+    },
+    {
+      "age_group": "60-69",
+      "patients": 9,
+      "median_risk": 0.006,
+      "alert_rate": 0.0,
+      "worsening_rate": 0.78
+    },
+    {
+      "age_group": "70-79",
+      "patients": 18,
+      "median_risk": 0.006,
+      "alert_rate": 0.22,
+      "worsening_rate": 0.72
+    },
+    {
+      "age_group": "80+",
+      "patients": 32,
+      "median_risk": 0.008,
+      "alert_rate": 0.31,
+      "worsening_rate": 0.69
+    }
+  ],
+  "by_sex_same_warning_signs": [
+    {
+      "warning_signs": 0,
+      "Female_patients": 19,
+      "Female_alert_rate": 0.0,
+      "Male_patients": 16,
+      "Male_alert_rate": 0.06
+    },
+    {
+      "warning_signs": 1,
+      "Female_patients": 19,
+      "Female_alert_rate": 0.37,
+      "Male_patients": 10,
+      "Male_alert_rate": 0.2
+    },
+    {
+      "warning_signs": 2,
+      "Female_patients": 5,
+      "Female_alert_rate": 1.0,
+      "Male_patients": 5,
+      "Male_alert_rate": 0.6
+    },
+    {
+      "warning_signs": 3,
+      "Female_patients": 1,
+      "Female_alert_rate": 1.0,
+      "Male_patients": 0,
+      "Male_alert_rate": null
+    }
+  ],
+  "realism": [
+    {
+      "signal": "Heart rate (bpm)",
+      "Real ICU patients (median of first 24 h)": 84.0,
+      "Simulated COPD cohort (median daily reading)": 78.0
+    },
+    {
+      "signal": "Breathing rate (/min)",
+      "Real ICU patients (median of first 24 h)": 19.0,
+      "Simulated COPD cohort (median daily reading)": 15.4
+    },
+    {
+      "signal": "SpO2 (%)",
+      "Real ICU patients (median of first 24 h)": 98.0,
+      "Simulated COPD cohort (median daily reading)": 95.2
+    }
+  ],
+  "spearman_risk_vs_worsening_signs": 0.71,
+  "auroc_risk_for_later_in_hospital_death": 0.49,
+  "deaths_after_48h": 20,
+  "survivors": 54,
+  "median_risk_copd_vs_not": [
+    0.003,
+    0.007
+  ],
+  "edge_cases": [
+    {
+      "case": "Real readings, unchanged",
+      "risk": 0.002,
+      "level": "Low",
+      "rule_checks": 0,
+      "result": "ok"
+    },
+    {
+      "case": "No oxygen sensor (SpO2 missing)",
+      "risk": 0.004,
+      "level": "Low",
+      "rule_checks": 0,
+      "result": "ok"
+    },
+    {
+      "case": "Oxygen falls to 82%",
+      "risk": 0.012,
+      "level": "Low",
+      "rule_checks": 2,
+      "result": "ok"
+    },
+    {
+      "case": "Breathing rises to 35/min",
+      "risk": 0.412,
+      "level": "High",
+      "rule_checks": 1,
+      "result": "ok"
+    },
+    {
+      "case": "All three signs worsen",
+      "risk": 0.958,
+      "level": "High",
+      "rule_checks": 3,
+      "result": "ok"
+    },
+    {
+      "case": "Age 18",
+      "risk": 0.002,
+      "level": "Low",
+      "rule_checks": 0,
+      "result": "ok"
+    },
+    {
+      "case": "Age 90",
+      "risk": 0.003,
+      "level": "Low",
+      "rule_checks": 0,
+      "result": "ok"
+    },
+    {
+      "case": "Sex switched",
+      "risk": 0.002,
+      "level": "Low",
+      "rule_checks": 0,
+      "result": "ok"
+    }
+  ],
+  "edge_cases_direction_correct": true,
+  "alert_threshold": 0.046,
+  "error_messages": [],
+  "caveat": "Real ICU patients are not a COPD home-monitoring cohort, and in-hospital death is not a COPD flare-up. This tests robustness, fairness and the direction of the signal on real people; it is not clinical validation."
+}
