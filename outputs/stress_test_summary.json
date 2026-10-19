@@ -157,7 +157,7 @@
     {
       "case": "Oxygen falls to 82%",
       "risk": 0.012,
-      "level": "Low",
+      "level": "Urgent",
       "rule_checks": 2,
       "result": "ok"
     },

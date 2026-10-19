@@ -17,6 +17,7 @@ from sklearn.model_selection import GroupShuffleSplit
 
 from config import PROCESSED, MODELS, OUTPUTS, SEED
 from features import build_feature_table, FEATURE_GROUPS, STREAM_OF_GROUP
+from twin import URGENT_SPO2
 from engine import ml_features, pm_multiplier, combine, PM_COLS
 
 PARAMS = dict(objective="binary", learning_rate=0.03, num_leaves=15, min_child_samples=80,
@@ -51,7 +52,8 @@ def fit(df, feats):
 
 def event_level(test, prob, thr):
     """Share of flare-ups preceded by an alert in the 3 days before onset, and false alerts per patient-month."""
-    t = test.assign(alert=prob >= thr)
+    # safety layer: oxygen below 90% always raises an alert, whatever the model's probability (see twin.final_level)
+    t = test.assign(alert=(prob >= thr) | (test.spo2_pct < URGENT_SPO2))
     caught = t[t.onset_within_3d == 1].groupby(["patient_id", "event_key"]).alert.any()
     false_alerts = (t.alert & (t.onset_within_3d == 0)).sum()
     patient_months = len(t) / 30.4

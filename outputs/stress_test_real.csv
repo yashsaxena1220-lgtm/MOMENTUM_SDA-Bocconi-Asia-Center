@@ -62,7 +62,7 @@ subject_id,sex,age,age_group,copd,hypertension,diabetes,heart_failure,status,usu
 40601,Female,73,70-79,0,1,0,1,ok,90.0,97.0,29.0,25.0,96.0,96.0,1,0.005,Low,0.0,1.0,Heart rate,0
 40612,Female,86,80+,1,0,0,1,ok,112.0,105.0,27.0,25.0,95.0,96.0,0,0.001,Low,0.0,0.0,Clinical history,0
 40655,Female,90,80+,0,1,1,1,skipped: under 48 h of ICU vitals,49.0,,14.0,,99.0,,0,,,,,,0
-40687,Female,82,80+,0,1,0,0,ok,114.0,108.0,28.0,31.0,92.5,89.0,2,0.134,High,1.0,3.0,Breathing rate,1
+40687,Female,82,80+,0,1,0,0,ok,114.0,108.0,28.0,31.0,92.5,89.0,2,0.134,Urgent,1.0,3.0,Breathing rate,1
 41795,Male,49,40-49,1,1,1,1,ok,84.0,87.0,21.0,22.0,98.0,96.0,1,0.037,Medium,0.0,0.0,Blood oxygen,0
 41914,Male,55,50-59,0,1,1,0,ok,116.0,113.0,21.0,21.0,99.0,99.0,0,0.001,Low,0.0,0.0,Clinical history,0
 41976,Male,62,60-69,0,1,1,0,ok,75.0,93.0,16.0,16.0,98.0,98.0,1,0.006,Low,0.0,1.0,Heart rate,0

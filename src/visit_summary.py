@@ -17,7 +17,7 @@ import pandas as pd
 from advisories import SEEK_CARE
 
 INK, TEAL, RED, PURPLE, BAND = "#1B2A35", "#1F5F7A", "#B23A2E", "#6B4E71", "#DCE9EF"
-LEVEL_COLOR = {"Low": "#5B8A72", "Medium": "#C98A1B", "High": RED, "In flare-up": PURPLE}
+LEVEL_COLOR = {"Low": "#5B8A72", "Medium": "#C98A1B", "High": RED, "Urgent": "#7A1712", "In flare-up": PURPLE}
 COMORB = {"hypertension": "high blood pressure", "diabetes": "diabetes", "ischemic_heart_disease": "heart disease",
           "heart_failure": "heart failure", "anemia": "anaemia"}
 
@@ -107,6 +107,8 @@ def build_summary_html(p, a, hist, env_city, day, thr, outlook=None, days=30):
         questions.append("Doses are often missed. Is the inhaler hard to use, too costly, or causing side effects?")
     if (a["row"].get("rescue_3d_vs_normal", 0) or 0) >= 1:
         questions.append("The rescue inhaler is being used more than usual. Does the treatment need changing?")
+    if a["level"] == "Urgent":
+        questions.insert(0, "Oxygen is below 90%. This needs urgent medical review today: does the patient need oxygen or hospital care?")
     if a["level"] in ("High", "Medium"):
         questions.append("The twin flags a raised flare-up risk. Should we start the written action plan (for example a standby course of medicine)?")
     if not p.influenza_vaccinated:

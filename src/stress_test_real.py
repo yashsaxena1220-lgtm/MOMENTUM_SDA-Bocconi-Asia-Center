@@ -126,7 +126,7 @@ def main():
             res = run_one(record(r, cohort), usual, now, env)
             ok = np.isfinite(res["prob"]) and 0 <= res["prob"] <= 1
             rows.append({"subject_id": r.subject_id, "status": "ok" if ok else "invalid output", "risk": res["prob"],
-                         "level": res["level"], "alert": int(res["prob"] >= thr), "rule_checks": len(res["rules"]),
+                         "level": res["level"], "alert": int(res["prob"] >= thr or res["level"] == "Urgent"), "rule_checks": len(res["rules"]),
                          "top_reason": res["triggers"][0]["group"] if res["triggers"] else ""})
         except Exception as e:  # a crash is a finding, not a stop
             errors.append(f"{r.subject_id}: {type(e).__name__}: {e}")

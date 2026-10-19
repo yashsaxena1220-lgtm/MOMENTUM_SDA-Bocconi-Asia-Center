@@ -15,7 +15,7 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from config import PROCESSED, OUTPUTS, CITIES, CALIBRATION, START_DATE, END_DATE, SEED, cal  # noqa: E402
-from twin import assess, score_history, score_row, sweep, rule_checks, risk_level, threshold, trigger_text  # noqa: E402
+from twin import assess, score_history, score_row, sweep, rule_checks, risk_level, final_level, threshold, trigger_text  # noqa: E402
 from simulate import env_multipliers, simulate_patient  # noqa: E402
 from engine import load as load_engine  # noqa: E402
 from advisories import all_cities, summarise, outlook, SEEK_CARE  # noqa: E402
@@ -26,7 +26,7 @@ st.set_page_config(page_title="BreatheTwin | COPD digital twin", page_icon="🫁
                    initial_sidebar_state="expanded")
 
 NAVY, TEAL, INK, MIST, LINE = "#12303F", "#1F5F7A", "#1B2A35", "#E4EBF0", "#D6E0E7"
-RISK = {"High": "#B23A2E", "Medium": "#C98A1B", "Low": "#5B8A72", "In flare-up": "#6B4E71"}
+RISK = {"Urgent": "#7A1712", "High": "#B23A2E", "Medium": "#C98A1B", "Low": "#5B8A72", "In flare-up": "#6B4E71"}
 UP, DOWN, SMOG = "#B23A2E", "#3C7A5E", "#8C7B55"
 AQI_SCALE = [[0, "#5B8A72"], [0.12, "#9BB45A"], [0.24, "#D9B83F"], [0.36, "#D9883F"], [0.5, "#B23A2E"], [1, "#5E1F3A"]]
 
@@ -118,6 +118,7 @@ def kpi(col, value, label, delta="", color=INK):
 LEVEL_MEANING = {"Low": "No action needed. Keep the usual routine.",
                  "Medium": "Watch closely. Check in with the patient in the next day or two.",
                  "High": "Contact the patient today. A flare-up is likely in the next 3 days.",
+                 "Urgent": "Act now. Oxygen is below 90%, a red flag that overrides the model. Get medical review today.",
                  "In flare-up": "The patient is having a flare-up now."}
 
 GLOSSARY = {
@@ -152,8 +153,8 @@ def base_layout(fig, h, title=None, **kw):
     return fig
 
 
-def gauge(prob, ref=None, h=230, title="Flare-up risk, next 3 days"):
-    lv = risk_level(prob)
+def gauge(prob, ref=None, h=230, title="Flare-up risk, next 3 days", level=None):
+    lv = level or risk_level(prob)
     top = min(1.0, max(0.6, prob * 1.15))
     fig = go.Figure(go.Indicator(
         mode="gauge+number" + ("+delta" if ref is not None else ""), value=prob * 100,
@@ -313,7 +314,8 @@ day = pd.Timestamp(st.sidebar.select_slider("Replay date", options=dates, value=
                                                  "(Mar 2019 to Feb 2020) so you can see how risk changes with the seasons."))
 today = risk[risk.date == day].merge(patients[["patient_id", "display_name", "age", "gold_stage", "exacerbations_prior_year"]],
                                      on="patient_id")
-order = today.assign(ill=today.level.eq("In flare-up")).sort_values(["ill", "risk"], ascending=[True, False])
+order = today.assign(ill=today.level.eq("In flare-up"), urg=today.level.eq("Urgent")).sort_values(
+    ["ill", "urg", "risk"], ascending=[True, False, False])
 labels = {r.patient_id: f"{r.display_name}, {r.age} yrs, {r.city} · {r.level} ({r.risk:.0%})" for r in order.itertuples()}
 if QP.get("pid") in labels and "pid" not in st.session_state:
     st.session_state.pid = QP["pid"]
@@ -349,7 +351,7 @@ if page == "Command centre":
     e_today = env[env.date == day].set_index("city")
     active = today[today.level != "In flare-up"]
     prev = risk[risk.date == day - pd.Timedelta(days=7)]
-    hi_now, hi_prev = int((today.level == "High").sum()), int((prev.level == "High").sum())
+    hi_now, hi_prev = int(today.level.isin(["High", "Urgent"]).sum()), int(prev.level.isin(["High", "Urgent"]).sum())
     worst = e_today.pm25.idxmax()
     c = st.columns(5)
     kpi(c[0], hi_now, "High-risk patients", f"{hi_now - hi_prev:+d} vs a week ago", RISK["High"])
@@ -370,7 +372,7 @@ if page == "Command centre":
     left, right = st.columns([1.15, 1])
     with left:
         st.markdown("### Risk and air across India")
-        by_city = today.groupby("city").agg(high=("level", lambda s: (s == "High").sum()), n=("risk", "size"),
+        by_city = today.groupby("city").agg(high=("level", lambda s: s.isin(["High", "Urgent"]).sum()), n=("risk", "size"),
                                             mean_risk=("risk", "mean")).reindex(CITIES)
         lat = [CITIES[cname]["lat"] for cname in CITIES]; lon = [CITIES[cname]["lon"] for cname in CITIES]
         fig = go.Figure(go.Scattergeo(
@@ -396,14 +398,19 @@ if page == "Command centre":
         bands = {"All ages": (0, 200), "30-44": (30, 44), "45-59": (45, 59), "60-74": (60, 74), "75 and over": (75, 200)}
         band_pick = st.radio("Age group", list(bands), horizontal=True, label_visibility="collapsed")
         lo, hi = bands[band_pick]
-        shown = active[active.age.between(lo, hi)].sort_values("risk", ascending=False).head(7)
+        shown = (active[active.age.between(lo, hi)].assign(urg=lambda d: d.level.eq("Urgent"))
+                 .sort_values(["urg", "risk"], ascending=[False, False]).head(7))
         if shown.empty:
             st.markdown("<p class='muted'>No patients in this age group today.</p>", unsafe_allow_html=True)
         for r in shown.itertuples():
             a = assess_cached(r.patient_id, day)
             why = a["triggers"][0]["text"] if a["triggers"] else "No single trigger stands out"
+            urgent = [t for k, t in a["rules"] if k == "urgent"]
+            if r.level == "Urgent" and urgent:
+                why = f"<b>Red flag: {urgent[0]}</b>"
+            big = "<span style='font-size:0.85rem;font-weight:700'>URGENT</span>" if r.level == "Urgent" else f"{r.risk:.0%}"
             st.markdown(f'<div class="alert" style="border-left-color:{RISK[r.level]}"><div class="pct" style="color:{RISK[r.level]}">'
-                        f'{r.risk:.0%}</div><div><div class="who">{r.display_name}, {r.age} yrs · {r.city}</div>'
+                        f'{big}</div><div><div class="who">{r.display_name}, {r.age} yrs · {r.city}</div>'
                         f'<div class="why">{why}</div>'
                         f'<div class="why" style="font-size:0.8rem">Record: {" · ".join(record_tags(P.loc[r.patient_id]))}</div></div></div>',
                         unsafe_allow_html=True)
@@ -429,7 +436,7 @@ if page == "Command centre":
     st.markdown("### The year at a glance")
     st.markdown("<p class='muted'>Brown bars: average air pollution across the 8 cities. Lines: how many patients were high risk "
                 "or in a flare-up. Both climb together in winter. The dotted line marks the replay date.</p>", unsafe_allow_html=True)
-    yr = risk.groupby("date").agg(high=("level", lambda s: (s == "High").sum()), ill=("level", lambda s: (s == "In flare-up").sum()))
+    yr = risk.groupby("date").agg(high=("level", lambda s: s.isin(["High", "Urgent"]).sum()), ill=("level", lambda s: (s == "In flare-up").sum()))
     pm_nat = env.groupby("date").pm25.mean()
     fig = go.Figure()
     fig.add_trace(go.Bar(x=pm_nat.index, y=pm_nat.values, name="Average PM2.5, 8 cities (µg/m³)", marker_color=SMOG, opacity=0.35, yaxis="y2"))
@@ -448,7 +455,8 @@ elif page == "Patient twin":
     a = assess_cached(pid, day)
     r = a["row"]
     ill = bool(wear[(wear.patient_id == pid) & (wear.date == day)].in_exacerbation.iloc[0])
-    status = "is in a flare-up today" if ill else f"{a['level'].lower()} risk of a flare-up in the next 3 days"
+    status = ("is in a flare-up today" if ill else "URGENT, oxygen below 90% today" if a["level"] == "Urgent"
+              else f"{a['level'].lower()} risk of a flare-up in the next 3 days")
     band(f"{p.display_name}, {p.age} yrs, {p.city}: {status}",
          f"GOLD {p.gold_stage} {p.copd_type.lower()} · {p.exacerbations_prior_year} flare-ups last year · "
          f"smoking {p.smoking_status} ({p.tobacco_type}) · cooking smoke {'yes' if p.biomass_fuel_exposure else 'no'} · "
@@ -467,7 +475,7 @@ elif page == "Patient twin":
     g1, g2 = st.columns([1, 2.2])
     with g1:
         yest = assess_cached(pid, day - pd.Timedelta(days=1))["prob"]
-        st.plotly_chart(gauge(a["prob"], ref=yest), use_container_width=True)
+        st.plotly_chart(gauge(a["prob"], ref=yest, level=a["level"]), use_container_width=True)
         st.markdown(f"<p class='muted'>Black mark: alert line ({THR:.1%}). The small number under the % is the change since yesterday.</p>",
                     unsafe_allow_html=True)
     with g2:
@@ -858,7 +866,7 @@ elif page == "Add a patient":
                     unsafe_allow_html=True)
         c1, c2 = st.columns([1, 1.4])
         with c1:
-            st.plotly_chart(gauge(res["prob"]), use_container_width=True)
+            st.plotly_chart(gauge(res["prob"], level=res["level"]), use_container_width=True)
             st.markdown("**Checks against own normal**")
             show_checks(res["rules"], res["prob"])
             st.markdown("**What would lower the risk**")
@@ -1044,7 +1052,7 @@ else:
         <li>The twin ran on every real patient with enough data, with no crash and no impossible output, including a missing oxygen sensor.</li>
         <li>Risk rises with real deterioration (rank correlation {stt['spearman_risk_vs_worsening_signs']}). Age 18 vs 90 and switching sex change risk very little; sex is not a model input.</li>
         <li>With the same number of warning signs, women were alerted somewhat more often than men; groups are small (5 to 19 people), so this needs a larger real cohort.</li>
-        <li>An oxygen drop alone barely moves the learned risk; the rule layer still flags it as urgent. A clinical version should weight SpO2 more.</li>
+        <li>An oxygen drop alone barely moves the learned risk (82% scored 1.2%). Fixed with a safety override: oxygen below 90% now makes the patient <b>Urgent</b> and puts them at the top of the call list, whatever the model says. The learned model should still weight SpO2 more once real data is available.</li>
         <li>Risk did not predict later in-hospital death (AUROC {stt['auroc_risk_for_later_in_hospital_death']}); death in intensive care is a different event from a COPD flare-up at home.</li>
         </ul></div>""", unsafe_allow_html=True)
 

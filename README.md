@@ -49,7 +49,7 @@ The aim is a phone call or a treatment adjustment before the hospital visit.
 
 ## What the dashboard shows
 
-The dashboard is written for non-medical users too: every page opens with a short "How to read this page" box, risk levels say what to do (Low: no action; Medium: watch closely; High: contact the patient today), and the sidebar has a glossary of medical words.
+The dashboard is written for non-medical users too: every page opens with a short "How to read this page" box, risk levels say what to do (Low: no action; Medium: watch closely; High: contact the patient today; Urgent: oxygen below 90%, act now), and the sidebar has a glossary of medical words.
 
 | Page | What it does |
 |---|---|
@@ -76,7 +76,7 @@ Every morning, for every patient (PDF: [`docs/flowchart.pdf`](docs/flowchart.pdf
 1. **Collect** three streams: wearables and home IoT (watch, pulse oximeter, smart inhaler clip), the health record, and the city's real air quality and weather.
 2. **Clean** them into one row per patient per day, with unit and range checks. A missing sensor stays missing; it is never read as zero.
 3. **Twin**: compare today and the last 3 days with the patient's own normal (days t-28 to t-8). The hybrid risk engine scores the risk of a flare-up in the next 1 to 3 days, and transparent rule checks run alongside.
-4. **Decide**: High (call the patient today), Medium (watch closely) or Low (no action).
+4. **Decide**: Urgent (oxygen below 90%: a red flag that overrides the model), High (call the patient today), Medium (watch closely) or Low (no action).
 5. **Act**: the ranked call list, the reasons, what would lower the risk, smog and cold alerts, and a printable visit summary. The doctor, nurse or ASHA worker acts, the outcome is recorded, and the baseline updates the next day.
 
 ## Wearables and IoT devices it works with
@@ -171,6 +171,7 @@ Health-record factors are rescaled so each GOLD stage keeps its published averag
 - **Direction rules:** the model is constrained so warning signs, sharper cold, a sicker record, higher eosinophils, smoking or cooking smoke never lower risk, and taking more inhaler doses never raises it, so every what-if answer moves the sensible way.
 - **Explanations:** per-patient SHAP contributions from LightGBM, grouped into plain-language factors ("what is pushing the risk up or down").
 - **Rule layer:** transparent checks against the patient's own normal, on both today's reading and the 3-day average, with thresholds set just inside the published average changes.
+- **Safety override:** a red-flag rule (oxygen below 90%) makes the patient Urgent and puts them at the top of the call list, whatever the model's probability. Rules catch emergencies; the model catches slow drift.
 - **Smog warnings:** the next 3 days of air quality and weather per city, using India's CPCB PM2.5 bands, with advice that gets stronger as air gets worse. In this demo the "forecast" is the real recorded data for those days of 2019-20; a live version would read an air-quality forecast.
 - **Validation:** patients split 70/30, so the model is tested on 120 people it never saw (280 used for training).
 
@@ -205,7 +206,7 @@ The twin was trained only on simulated patients, so we fed it 100 real, de-ident
 | Age and sex | Age 18 vs 90 and switching sex barely change risk (sex is not a model input). Women alerted 30%, men 19%; women also showed more warning signs |
 | Like for like | With the same number of warning signs, women were alerted somewhat more often than men; groups are 5 to 19 people, so this needs a larger real cohort |
 | Realism | Real ICU patients breathe faster (median 19 vs 15.4/min) and often get extra oxygen (SpO2 98% vs 95.2%) than our simulated home cohort |
-| Found to fix | An SpO2 drop alone barely moves the learned risk (the rule layer still flags it urgent); a clinical version should weight oxygen more |
+| Found and fixed | An SpO2 drop alone barely moves the learned risk (oxygen at 82% scored 1.2%, Low). Fixed with the safety override: oxygen below 90% now makes the patient Urgent, and the same case now returns Urgent |
 | Limit | Risk did not predict later in-hospital death (AUROC 0.49); death in intensive care is a different event from a COPD flare-up at home |
 
 This is a stress test of robustness, fairness and the direction of the signal on real people, not clinical validation.
@@ -300,7 +301,7 @@ docs/                     presentation, flowchart, architecture diagram, screens
 
 - Wearable readings and flare-ups are simulated; the model has not seen a real COPD patient's watch data. It has been stress-tested on 100 real hospital patients, which checks robustness and direction, not accuracy.
 - Device connections (Health Connect, HealthKit, Fitbit, Garmin, OMRON, ADHERO) are designed but not yet built; readings are simulated or typed in.
-- An oxygen drop on its own moves the learned risk too little (found in the stress test); the rule layer covers it for now.
+- An oxygen drop on its own moves the learned risk too little (found in the stress test). The safety override now makes any reading below 90% Urgent, but the learned model itself should weight oxygen more once real data is available.
 - Synthea's COPD cohort is US-based; the India overlay, the younger patients and the stage shares are our assumptions.
 - No India-specific effect size linking PM2.5 to COPD flare-ups was found; the 2.5% per 10 µg/m³ figure is a global meta-analysis.
 - Cooking smoke, age, other conditions, low BMI, humidity, sleep and missed-dose effects have no published effect size and are marked as assumptions.

@@ -4,6 +4,7 @@ import pandas as pd
 from config import PROCESSED
 from features import build_feature_table
 from engine import predict, load as load_model
+from twin import URGENT_SPO2
 
 
 def main():
@@ -15,6 +16,7 @@ def main():
     f["risk"] = predict(f).round(4)
     thr = meta["alert_threshold"]
     f["level"] = pd.cut(f.risk, [-1, thr * 0.5, thr, 2], labels=["Low", "Medium", "High"]).astype(str)
+    f.loc[f.spo2_pct < URGENT_SPO2, "level"] = "Urgent"        # safety layer: oxygen below 90% overrides the model
     f.loc[f.in_exacerbation == 1, "level"] = "In flare-up"
     f[["patient_id", "date", "city", "risk", "level", "in_exacerbation", "exacerbation_onset"]].to_csv(
         PROCESSED / "daily_risk.csv", index=False)

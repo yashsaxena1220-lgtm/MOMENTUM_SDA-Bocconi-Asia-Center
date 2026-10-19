@@ -22,9 +22,20 @@ def threshold():
     return load()[1]["alert_threshold"]
 
 
+URGENT_SPO2 = 90   # oxygen below this is an emergency in COPD, whatever the model says
+
+
 def risk_level(prob, thr=None):
     thr = thr or threshold()
     return "High" if prob >= thr else "Medium" if prob >= thr * 0.5 else "Low"
+
+
+def final_level(prob, rules, thr=None):
+    """Safety layer: a red-flag rule check (oxygen below 90%) overrides the model and makes the patient Urgent.
+    Rules catch emergencies; the model catches slow drift."""
+    if any(kind == "urgent" for kind, _ in rules):
+        return "Urgent"
+    return risk_level(prob, thr)
 
 
 def apply_manual_baseline(f, manual):
@@ -69,8 +80,10 @@ def rule_checks(v):
     d, when = _worst(v, "spo2", -1)
     if d <= -2:
         out.append(("warning", f"Oxygen {d:+.1f} points below own normal ({when})"))
-    if pd.notna(v.get("spo2_now")) and v.get("spo2_now", 99) < 90:
-        out.append(("urgent", f"Oxygen {v['spo2_now']:.0f}% today, below 90%"))
+    if pd.notna(v.get("spo2_now")) and v.get("spo2_now", 99) < URGENT_SPO2:
+        x = v["spo2_now"]
+        shown = f"{x:.0f}" if round(x) < URGENT_SPO2 else f"{x:.1f}"   # never print "90% ... below 90%"
+        out.append(("urgent", f"Oxygen {shown}% today, below {URGENT_SPO2}%"))
     d, when = _worst(v, "hr", +1)
     if d >= 7:
         out.append(("warning", f"Resting heart rate {d:+.0f} bpm above own normal ({when})"))
@@ -142,8 +155,9 @@ def assess(patient, wear_hist, env_city, manual_baseline=None):
         "Take every inhaler dose": score_row(r.copy().pipe(_set, adherence_7d=1.0))[0],
     }
     scen["Both"] = score_row(r.copy().pipe(_set, pm25=r.pm25 * frac, pm25_lag2_7=r.pm25_lag2_7 * frac, adherence_7d=1.0))[0]
-    return {"prob": prob, "level": risk_level(prob), "threshold": threshold(), "groups": groups, "base": base,
-            "triggers": triggers, "rules": rule_checks(vals), "scenarios": scen, "features": f, "row": r}
+    rules = rule_checks(vals)
+    return {"prob": prob, "level": final_level(prob, rules), "threshold": threshold(), "groups": groups, "base": base,
+            "triggers": triggers, "rules": rules, "scenarios": scen, "features": f, "row": r}
 
 
 def _set(s, **kw):
