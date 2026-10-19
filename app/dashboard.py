@@ -14,8 +14,19 @@ import streamlit as st
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
+
+# Streamlit keeps imported modules in memory across code updates. Reload our own modules when their file
+# has changed, so a redeploy never mixes a new dashboard with an old twin.py (dependencies first).
+import importlib  # noqa: E402
+for _name in ["config", "features", "engine", "twin", "simulate", "advisories", "visit_summary", "devices"]:
+    _mod = sys.modules.get(_name)
+    if _mod is not None and getattr(_mod, "__file__", None):
+        _mt = Path(_mod.__file__).stat().st_mtime
+        if getattr(_mod, "_bt_mtime", None) != _mt:
+            _mod = importlib.reload(_mod)
+            _mod._bt_mtime = _mt
 from config import PROCESSED, OUTPUTS, CITIES, CALIBRATION, START_DATE, END_DATE, SEED, cal  # noqa: E402
-from twin import assess, score_history, score_row, sweep, rule_checks, risk_level, final_level, threshold, trigger_text  # noqa: E402
+from twin import assess, score_history, score_row, sweep, rule_checks, risk_level, threshold, trigger_text  # noqa: E402
 from simulate import env_multipliers, simulate_patient  # noqa: E402
 from engine import load as load_engine  # noqa: E402
 from advisories import all_cities, summarise, outlook, SEEK_CARE  # noqa: E402
