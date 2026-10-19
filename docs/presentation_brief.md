@@ -1,7 +1,7 @@
 # Presentation brief: BreatheTwin (Team MOMENTUM)
 
 Paste or upload this file into a new chat and ask: "Make a presentation deck from this brief."
-All numbers below are current as of 15 Oct 2026.
+All numbers below are current as of 19 Oct 2026.
 
 ## Competition and deliverable
 - Digital Twin Challenge 2026 by Happiest Health (on Unstop). Submission closes 20 Oct 2026, 7 PM IST.
@@ -26,7 +26,7 @@ Early warning and prevention of COPD flare-ups for Indian patients, used by doct
 
 ## How it works (for the architecture slide)
 Three data streams feed one twin per patient:
-1. Health record (static EHR): 400 synthetic COPD patients. 300 come from Synthea (open-source synthetic hospital records; ages 52-92). 100 younger patients (ages 30-51) were added by us, because COPD starts earlier in India. India-specific fields added by us: city, cooking smoke, bidi vs cigarette, blood eosinophils, alpha-1 gene variant, flu vaccine, previous flare-ups.
+1. Health record (static EHR): 420 synthetic COPD patients. 300 come from Synthea (open-source synthetic hospital records; ages 52-92). 120 younger patients were added by us, because COPD starts earlier in India: 100 aged 30-51, and 20 aged 22-29 who each have a documented early-onset cause (alpha-1 gene variant, lung damage after tuberculosis, or heavy cooking smoke since childhood). India-specific fields added by us: city, cooking smoke, bidi vs cigarette, blood eosinophils, alpha-1 gene variant, flu vaccine, previous flare-ups.
 2. Wearables and smart inhaler (daily): heart rate, breathing rate, blood oxygen (SpO2), steps, sleep, rescue-inhaler puffs, daily-inhaler doses. Simulated, with every effect size taken from published studies (listed in src/config.py).
 3. City air and weather (real): CPCB daily PM2.5 for 8 cities (Delhi, Lucknow, Patna, Kolkata, Mumbai, Hyderabad, Bengaluru, Chennai) and Open-Meteo temperature and humidity, replaying 1 Mar 2019 to 29 Feb 2020.
 
@@ -35,13 +35,13 @@ Then:
 - Hybrid risk engine: a LightGBM machine-learning model learns from body signals, inhaler use, weather and the health record. Air pollution is not learned; it uses a published dose-response (DeVries 2017: +2.5% risk per 10 µg/m³ PM2.5). Built-in rules make sure warning signs never lower the risk and taking more inhaler doses never raises it.
 - Outputs: the risk of a flare-up in the next 3 days, the reasons, safety checks, what-if answers, smog warnings, and a printable visit summary.
 
-## Results (tested on 120 patients the model never saw; simulated data)
-- Accuracy score (AUROC): 0.80. Published real-world COPD tools range from 0.68 to 0.85.
-- Flare-ups warned 1 to 3 days ahead: 66%.
-- False alerts: 0.80 per patient per month (fewer than one a month).
-- What each data stream adds (AUROC): health record alone 0.66, environment alone 0.45, wearables alone 0.79, wearables + health record 0.81, all three 0.80.
+## Results (tested on 126 patients the model never saw; simulated data)
+- Accuracy score (AUROC): 0.815. Published real-world COPD tools range from 0.68 to 0.85.
+- Flare-ups warned 1 to 3 days ahead: 67%.
+- False alerts: 0.91 per patient per month (fewer than one a month).
+- What each data stream adds (AUROC): health record alone 0.59, environment alone 0.57, wearables alone 0.818, wearables + health record 0.818, all three 0.815.
 - Honest reading: the body signals carry the 3-day warning, and the health record sets each person's starting risk. The environment says little about which exact 3 days, but it explains seasonal risk and powers the smog warnings and what-if advice.
-- Share of the twin's reasoning: health record 32%, blood oxygen 15%, breathing rate 12%, rescue inhaler 11%, heart rate 10%, cold snaps 6%, activity 5%, missed doses 3%, air pollution 2%, humidity 2%, sleep 2%.
+- Share of the twin's reasoning: health record 40%, breathing rate 13%, rescue inhaler 11%, heart rate 10%, blood oxygen 9%, cold snaps 8%, activity 4%, air pollution 2%, humidity 2%, sleep 2%, missed doses 1%.
 - Ready-made charts: outputs/model_performance.png and outputs/trigger_importance.png (both current).
 
 ## Dashboard features (one slide each, or a features overview)
@@ -108,4 +108,4 @@ Python, pandas, LightGBM, scikit-learn, Plotly, Streamlit (dashboard), matplotli
 
 ## Images available
 - outputs/model_performance.png, outputs/trigger_importance.png: current.
-- docs/screenshots/*.png: OLD (taken before the 13-15 Oct changes). Retake from the live dashboard before using: overview, one patient (with the health-record section), what-if lab, check a new person, smog warnings, and a visit summary.
+- docs/screenshots/*.png: current (retaken 19 Oct 2026 with the new theme). On the live site the India map also shows; it is cropped out of the overview shot.

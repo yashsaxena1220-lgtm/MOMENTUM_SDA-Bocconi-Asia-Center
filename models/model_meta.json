@@ -29,8 +29,8 @@
     "home_oxygen",
     "bmi"
   ],
-  "alert_threshold": 0.046002876932943554,
-  "pm_norm": 1.076391104342207,
+  "alert_threshold": 0.03810588443861715,
+  "pm_norm": 1.0730239858605455,
   "groups": {
     "Breathing rate": [
       "rr_dev1",

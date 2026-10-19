@@ -21,8 +21,8 @@
   "copd_patients": 16,
   "copd_assessed": 11,
   "risk_range": [
-    0.0,
-    0.974
+    0.001,
+    0.978
   ],
   "by_sex": [
     {
@@ -36,7 +36,7 @@
       "sex": "Male",
       "patients": 31,
       "median_risk": 0.006,
-      "alert_rate": 0.19,
+      "alert_rate": 0.23,
       "worsening_rate": 0.65
     }
   ],
@@ -44,21 +44,21 @@
     {
       "age_group": "18-39",
       "patients": 2,
-      "median_risk": 0.202,
+      "median_risk": 0.156,
       "alert_rate": 0.5,
       "worsening_rate": 1.0
     },
     {
       "age_group": "40-49",
       "patients": 6,
-      "median_risk": 0.006,
-      "alert_rate": 0.17,
+      "median_risk": 0.009,
+      "alert_rate": 0.33,
       "worsening_rate": 0.5
     },
     {
       "age_group": "50-59",
       "patients": 7,
-      "median_risk": 0.006,
+      "median_risk": 0.009,
       "alert_rate": 0.29,
       "worsening_rate": 0.57
     },
@@ -66,21 +66,21 @@
       "age_group": "60-69",
       "patients": 9,
       "median_risk": 0.006,
-      "alert_rate": 0.0,
+      "alert_rate": 0.11,
       "worsening_rate": 0.78
     },
     {
       "age_group": "70-79",
       "patients": 18,
-      "median_risk": 0.006,
-      "alert_rate": 0.22,
+      "median_risk": 0.005,
+      "alert_rate": 0.17,
       "worsening_rate": 0.72
     },
     {
       "age_group": "80+",
       "patients": 32,
       "median_risk": 0.008,
-      "alert_rate": 0.31,
+      "alert_rate": 0.34,
       "worsening_rate": 0.69
     }
   ],
@@ -88,14 +88,14 @@
     {
       "warning_signs": 0,
       "Female_patients": 19,
-      "Female_alert_rate": 0.0,
+      "Female_alert_rate": 0.11,
       "Male_patients": 16,
       "Male_alert_rate": 0.06
     },
     {
       "warning_signs": 1,
       "Female_patients": 19,
-      "Female_alert_rate": 0.37,
+      "Female_alert_rate": 0.26,
       "Male_patients": 10,
       "Male_alert_rate": 0.2
     },
@@ -104,7 +104,7 @@
       "Female_patients": 5,
       "Female_alert_rate": 1.0,
       "Male_patients": 5,
-      "Male_alert_rate": 0.6
+      "Male_alert_rate": 0.8
     },
     {
       "warning_signs": 3,
@@ -118,25 +118,25 @@
     {
       "signal": "Heart rate (bpm)",
       "Real ICU patients (median of first 24 h)": 84.0,
-      "Simulated COPD cohort (median daily reading)": 78.0
+      "Simulated COPD cohort (median daily reading)": 79.0
     },
     {
       "signal": "Breathing rate (/min)",
       "Real ICU patients (median of first 24 h)": 19.0,
-      "Simulated COPD cohort (median daily reading)": 15.4
+      "Simulated COPD cohort (median daily reading)": 15.5
     },
     {
       "signal": "SpO2 (%)",
       "Real ICU patients (median of first 24 h)": 98.0,
-      "Simulated COPD cohort (median daily reading)": 95.2
+      "Simulated COPD cohort (median daily reading)": 95.3
     }
   ],
-  "spearman_risk_vs_worsening_signs": 0.71,
-  "auroc_risk_for_later_in_hospital_death": 0.49,
+  "spearman_risk_vs_worsening_signs": 0.73,
+  "auroc_risk_for_later_in_hospital_death": 0.51,
   "deaths_after_48h": 20,
   "survivors": 54,
   "median_risk_copd_vs_not": [
-    0.003,
+    0.004,
     0.007
   ],
   "edge_cases": [
@@ -156,35 +156,35 @@
     },
     {
       "case": "Oxygen falls to 82%",
-      "risk": 0.012,
+      "risk": 0.02,
       "level": "Urgent",
       "rule_checks": 2,
       "result": "ok"
     },
     {
       "case": "Breathing rises to 35/min",
-      "risk": 0.412,
+      "risk": 0.24,
       "level": "High",
       "rule_checks": 1,
       "result": "ok"
     },
     {
       "case": "All three signs worsen",
-      "risk": 0.958,
+      "risk": 0.972,
       "level": "High",
       "rule_checks": 3,
       "result": "ok"
     },
     {
       "case": "Age 18",
-      "risk": 0.002,
+      "risk": 0.001,
       "level": "Low",
       "rule_checks": 0,
       "result": "ok"
     },
     {
       "case": "Age 90",
-      "risk": 0.003,
+      "risk": 0.002,
       "level": "Low",
       "rule_checks": 0,
       "result": "ok"
@@ -198,7 +198,7 @@
     }
   ],
   "edge_cases_direction_correct": true,
-  "alert_threshold": 0.046,
+  "alert_threshold": 0.038,
   "error_messages": [],
   "caveat": "Real ICU patients are not a COPD home-monitoring cohort, and in-hospital death is not a COPD flare-up. This tests robustness, fairness and the direction of the signal on real people; it is not clinical validation."
 }

@@ -9,7 +9,7 @@ Output (data/processed/): patients.csv, patients_field_sources.csv
 import numpy as np
 import pandas as pd
 
-from config import RAW, PROCESSED, CITIES, START_DATE, SEED, COPD_SNOMED, GOLD_SHARES, YOUNG_COHORT, cal
+from config import RAW, PROCESSED, CITIES, START_DATE, SEED, COPD_SNOMED, GOLD_SHARES, YOUNG_COHORT, UNDER30_COHORT, cal
 
 SYNTHEA_DIR = RAW / "synthea_csv"
 
@@ -105,12 +105,12 @@ def load_synthea(snapshot=START_DATE):
     return p.reset_index(drop=True)
 
 
-def young_cohort(seed=SEED + 1):
+def young_cohort(seed=SEED + 1, age_bands=None, gold_p=(.25, .45, .22, .08), onset_age=25):
     """Synthea's COPD module never produces patients under ~50, but in India COPD often starts earlier
     (cooking smoke, bidi smoking, past tuberculosis). These younger patients are drawn by us (India overlay,
     synthetic) with the same fields as the Synthea records. Shares below are ASSUMPTIONS."""
     rng = np.random.default_rng(seed)
-    ages = np.concatenate([rng.integers(lo, hi + 1, n) for (lo, hi), n in YOUNG_COHORT["age_bands"].items()])
+    ages = np.concatenate([rng.integers(lo, hi + 1, n) for (lo, hi), n in (age_bands or YOUNG_COHORT["age_bands"]).items()])
     n = len(ages)
     sex = np.where(rng.random(n) < 0.55, "F", "M")          # biomass smoke makes early COPD common in women
     smoke = np.where(sex == "M", rng.choice(["current", "former", "never"], n, p=[.45, .25, .30]),
@@ -119,7 +119,7 @@ def young_cohort(seed=SEED + 1):
     y = pd.DataFrame({
         "synthea_id": "", "age": ages, "sex": sex,
         "copd_type": rng.choice(list(COPD_SNOMED.values()), n),
-        "years_since_copd_diagnosis": np.clip(rng.exponential(3, n), 0.3, ages - 25).round(1),
+        "years_since_copd_diagnosis": np.clip(rng.exponential(3, n), 0.3, ages - onset_age).round(1),
         "fev1_fvc": np.nan, "bmi": bmi,
         "systolic_bp": rng.normal(122, 12, n).round(0), "diastolic_bp": rng.normal(78, 8, n).round(0),
         "heart_rate": np.nan, "resp_rate": np.nan, "hemoglobin": np.nan, "fev1_fvc_readings": 0,
@@ -129,7 +129,7 @@ def young_cohort(seed=SEED + 1):
         "anemia": (rng.random(n) < np.where(sex == "F", 0.20, 0.05)).astype(int),
         "obesity": (bmi >= 30).astype(int), "on_maintenance_inhaler": 0, "on_rescue_inhaler": 1,
         "home_oxygen": (rng.random(n) < 0.02).astype(int), "influenza_vaccinated": 0,
-        "gold_stage": rng.choice([1, 2, 3, 4], n, p=[.25, .45, .22, .08]),      # milder on average when younger
+        "gold_stage": rng.choice([1, 2, 3, 4], n, p=list(gold_p)),      # milder on average when younger
         "record_source": "India overlay (synthetic, ours)",
     })
     return y
@@ -159,7 +159,8 @@ def india_overlay(p, seed=SEED):
     n = len(p)
     p = p.copy()
     syn = p.record_source.eq("Synthea")
-    p.loc[syn, "gold_stage"] = stage_by_rank(p.loc[syn, "fev1_fvc"], rng)
+    if syn.any():
+        p.loc[syn, "gold_stage"] = stage_by_rank(p.loc[syn, "fev1_fvc"], rng)
     p["gold_stage"] = p.gold_stage.astype(int)
     # Synthea records nearly everyone with COPD as a former smoker; in India many keep smoking (ASSUMPTION: a quarter)
     p.loc[syn & p.smoking_status.eq("former") & (rng.random(n) < 0.25), "smoking_status"] = "current"
@@ -198,16 +199,36 @@ FIELD_SOURCES = {
                                 "lung_function_pct", "gold_stage (stage shares set by overlay, ranked by Synthea lung function)", "bmi", "systolic_bp", "diastolic_bp", "heart_rate",
                                 "resp_rate", "hemoglobin", "smoking_status (a quarter of former set to current by overlay)", "hypertension", "diabetes",
                                 "ischemic_heart_disease", "heart_failure", "anemia", "obesity", "home_oxygen"],
-    "India overlay (synthetic, ours)": ["all fields for the 100 patients aged 30-51 (record_source column)","display_name", "city", "region", "biomass_fuel_exposure", "tobacco_type",
+    "India overlay (synthetic, ours)": ["all fields for the 100 patients aged 30-51 and the 20 aged 22-29 (record_source column)", "early_onset_cause", "past_tuberculosis","display_name", "city", "region", "biomass_fuel_exposure", "tobacco_type",
                                         "frequent_exacerbator", "exacerbations_prior_year", "blood_eosinophils_per_ul",
                                         "serpina1_variant", "influenza_vaccinated", "adherence_habit", "pollution_sensitivity",
                                         "on_maintenance_inhaler", "on_rescue_inhaler"],
 }
 
 
+def under30_cohort(start_id, seed=SEED + 30):
+    """20 patients aged 22-29, each with a documented cause of early-onset COPD (config.UNDER30_COHORT).
+    Built with their own random seed and appended, so the first 400 patients stay exactly as before."""
+    cfg = UNDER30_COHORT
+    rng = np.random.default_rng(seed + 1)
+    u = young_cohort(seed=seed, age_bands={cfg["age_band"]: cfg["n"]}, gold_p=(.35, .45, .15, .05), onset_age=18)
+    u = india_overlay(u, seed=seed + 2)
+    causes = list(cfg["causes"])
+    u["early_onset_cause"] = rng.choice(causes, len(u), p=list(cfg["causes"].values()))
+    u["serpina1_variant"] = u.early_onset_cause.str.startswith("Alpha-1").astype(int)
+    u["past_tuberculosis"] = u.early_onset_cause.str.contains("tuberculosis").astype(int)
+    u.loc[u.early_onset_cause.str.contains("cooking"), "biomass_fuel_exposure"] = 1
+    u["record_source"] = "India overlay, under 30 (synthetic, ours)"
+    u["patient_id"] = [f"MOM-{i:04d}" for i in range(start_id, start_id + len(u))]
+    return u
+
+
 def build_patients():
     syn = load_synthea().assign(record_source="Synthea", gold_stage=np.nan)
     p = india_overlay(pd.concat([syn, young_cohort()], ignore_index=True))
+    p["early_onset_cause"] = ""
+    p["past_tuberculosis"] = 0
+    p = pd.concat([p, under30_cohort(len(p) + 1)], ignore_index=True)
     PROCESSED.mkdir(parents=True, exist_ok=True)
     p.to_csv(PROCESSED / "patients.csv", index=False)
     rows = [(f, src) for src, fs in FIELD_SOURCES.items() for f in fs]

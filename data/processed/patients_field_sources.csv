@@ -21,7 +21,9 @@ heart_failure,Synthea (synthetic EHR)
 anemia,Synthea (synthetic EHR)
 obesity,Synthea (synthetic EHR)
 home_oxygen,Synthea (synthetic EHR)
-all fields for the 100 patients aged 30-51 (record_source column),"India overlay (synthetic, ours)"
+all fields for the 100 patients aged 30-51 and the 20 aged 22-29 (record_source column),"India overlay (synthetic, ours)"
+early_onset_cause,"India overlay (synthetic, ours)"
+past_tuberculosis,"India overlay (synthetic, ours)"
 display_name,"India overlay (synthetic, ours)"
 city,"India overlay (synthetic, ours)"
 region,"India overlay (synthetic, ours)"

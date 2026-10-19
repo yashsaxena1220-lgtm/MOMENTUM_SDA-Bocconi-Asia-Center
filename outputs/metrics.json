@@ -1,48 +1,48 @@
 {
   "task": "Predict whether a COPD flare-up starts in the next 1-3 days",
-  "patients_train": 280,
-  "patients_test": 120,
-  "patient_days_test": 39518,
-  "positive_rate_test": 0.0084,
-  "auroc": 0.8,
-  "auprc": 0.24,
-  "alert_threshold": 0.046,
-  "flare_ups_warned_in_advance": 0.655,
-  "false_alerts_per_patient_month": 0.8,
+  "patients_train": 294,
+  "patients_test": 126,
+  "patient_days_test": 41274,
+  "positive_rate_test": 0.0092,
+  "auroc": 0.815,
+  "auprc": 0.269,
+  "alert_threshold": 0.0381,
+  "flare_ups_warned_in_advance": 0.672,
+  "false_alerts_per_patient_month": 0.91,
   "single_stream_ablation": {
     "Health record only": {
-      "auroc": 0.659,
-      "auprc": 0.016
+      "auroc": 0.593,
+      "auprc": 0.012
     },
     "Environment only": {
-      "auroc": 0.452,
-      "auprc": 0.008
+      "auroc": 0.566,
+      "auprc": 0.012
     },
     "Wearables only": {
-      "auroc": 0.791,
-      "auprc": 0.233
+      "auroc": 0.818,
+      "auprc": 0.293
     },
     "Wearables + health record": {
-      "auroc": 0.805,
-      "auprc": 0.249
+      "auroc": 0.818,
+      "auprc": 0.276
     },
     "All three streams (twin)": {
-      "auroc": 0.8,
-      "auprc": 0.24
+      "auroc": 0.815,
+      "auprc": 0.269
     }
   },
   "trigger_group_importance_pct": {
-    "Clinical history": 32.1,
-    "Blood oxygen": 14.5,
-    "Breathing rate": 12.4,
+    "Clinical history": 39.5,
+    "Breathing rate": 12.5,
     "Rescue inhaler use": 10.7,
-    "Heart rate": 9.9,
-    "Cold snap": 6.3,
-    "Activity": 5.4,
-    "Missed inhaler doses": 2.7,
-    "Air pollution (PM2.5)": 2.2,
+    "Heart rate": 9.8,
+    "Blood oxygen": 9.3,
+    "Cold snap": 7.6,
+    "Activity": 3.9,
+    "Air pollution (PM2.5)": 2.3,
     "Humidity / heat": 2.0,
-    "Sleep": 1.8
+    "Sleep": 1.6,
+    "Missed inhaler doses": 0.6
   },
   "pm25_method": "Published dose-response (DeVries 2017) applied on the odds scale; not learned by the model.",
   "published_benchmark": "Real-world studies report AUROC 0.68 (Shah 2017) to 0.85 (Hurst 2010).",

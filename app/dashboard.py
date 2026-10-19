@@ -3,6 +3,7 @@ BreatheTwin: COPD digital twin, doctor dashboard.
 
 Run:  python -m streamlit run app/dashboard.py
 """
+import html
 import json
 import sys
 from pathlib import Path
@@ -36,45 +37,81 @@ from devices import SIGNALS, DEVICES, KITS  # noqa: E402
 st.set_page_config(page_title="BreatheTwin | COPD digital twin", page_icon="🫁", layout="wide",
                    initial_sidebar_state="expanded")
 
-NAVY, TEAL, INK, MIST, LINE = "#12303F", "#1F5F7A", "#1B2A35", "#E4EBF0", "#D6E0E7"
-RISK = {"Urgent": "#7A1712", "High": "#B23A2E", "Medium": "#C98A1B", "Low": "#5B8A72", "In flare-up": "#6B4E71"}
-UP, DOWN, SMOG = "#B23A2E", "#3C7A5E", "#8C7B55"
-AQI_SCALE = [[0, "#5B8A72"], [0.12, "#9BB45A"], [0.24, "#D9B83F"], [0.36, "#D9883F"], [0.5, "#B23A2E"], [1, "#5E1F3A"]]
+# Theme: soft sky canvas, white cards, clinical blue with a breath-teal accent (one family: Manrope)
+SKY, CARD, INK, MUTE, LINE, MIST = "#E9F1FC", "#FFFFFF", "#16233F", "#67769A", "#E1E9F5", "#F1F5FC"
+BLUE, TEAL, INDIGO = "#2E62F0", "#18B3A4", "#3A26B5"
+NAVY = INDIGO
+RISK = {"Urgent": "#A3122F", "High": "#EC4A5A", "Medium": "#F0A23B", "Low": "#18A06F", "In flare-up": "#7B61FF"}
+UP, DOWN, SMOG = "#EC4A5A", "#18A06F", "#A08A5C"
+AQI_SCALE = [[0, "#18A06F"], [0.12, "#8CC63F"], [0.24, "#F2C94C"], [0.36, "#F0A23B"], [0.5, "#EC4A5A"], [1, "#7A1F4A"]]
+FONT = "Manrope, system-ui, sans-serif"
+SHADOW = "0 1px 2px rgba(22,35,63,0.04), 0 8px 24px rgba(46,98,240,0.07)"
 
 st.markdown(f"""
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-html, body, [class*="css"], .stMarkdown, button, input, select, textarea, label {{ font-family: 'Atkinson Hyperlegible', sans-serif; }}
-h1, h2, h3 {{ font-family: 'Source Serif 4', Georgia, serif !important; color: {INK}; letter-spacing: -0.01em; }}
-h3 {{ font-size: 1.25rem !important; margin-top: 0.6rem !important; }}
-.block-container {{ padding-top: 1.2rem; max-width: 1400px; }}
-.band {{ background: {NAVY}; color: #fff; border-radius: 14px; padding: 1.1rem 1.4rem; margin-bottom: 1rem;
-         display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }}
-.band h1 {{ color: #fff !important; margin: 0 !important; font-size: 1.9rem !important; line-height: 1.15 !important; }}
-.band .sub {{ color: #B9CCD8; font-size: 0.95rem; margin-top: 0.25rem; }}
-.chip {{ display: inline-block; padding: 0.15rem 0.65rem; border-radius: 999px; font-size: 0.85rem; font-weight: 700; color: #fff; }}
-.chip.live {{ background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.35); }}
-.kpi {{ background: #fff; border: 1px solid {LINE}; border-radius: 12px; padding: 0.8rem 1rem; height: 100%; }}
-.kpi .v {{ font-family: 'Source Serif 4', serif; font-size: 2rem; line-height: 1.1; color: {INK}; }}
-.kpi .l {{ color: #536673; font-size: 0.88rem; }}
-.kpi .d {{ font-size: 0.85rem; margin-top: 0.15rem; }}
-.card {{ background: #fff; border: 1px solid {LINE}; border-radius: 12px; padding: 0.9rem 1rem; margin-bottom: 0.7rem; }}
-.alert {{ display: grid; grid-template-columns: 4.2rem 1fr; gap: 0.7rem; align-items: center; background: #fff;
-          border: 1px solid {LINE}; border-left-width: 5px; border-radius: 10px; padding: 0.55rem 0.8rem; margin-bottom: 0.45rem; }}
-.alert .pct {{ font-family: 'Source Serif 4', serif; font-size: 1.45rem; text-align: right; }}
-.alert .who {{ font-weight: 700; }}
-.alert .why {{ color: #536673; font-size: 0.88rem; }}
-.rule {{ border-left: 4px solid; padding: 0.4rem 0.75rem; margin: 0.3rem 0; background: #fff; border-radius: 0 8px 8px 0; }}
-.muted {{ color: #536673; font-size: 0.9rem; }}
-.vital {{ background: #fff; border: 1px solid {LINE}; border-radius: 12px; padding: 0.7rem 0.9rem; }}
-.vital .n {{ color: #536673; font-size: 0.85rem; }}
-.vital .x {{ font-family: 'Source Serif 4', serif; font-size: 1.7rem; }}
-div[data-testid="stSidebar"] {{ background: #E7EEF2; }}
-.howto {{ background: #EAF3F6; border: 1px solid #C9DEE6; border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 1rem; }}
-.howto b.h {{ color: {TEAL}; }}
-.howto ul {{ margin: 0.3rem 0 0 0; padding-left: 1.2rem; }}
-.howto li {{ margin-bottom: 0.15rem; }}
+html, body, [class*="css"], .stMarkdown, button, input, select, textarea, label {{ font-family: {FONT}; }}
+.stApp {{ background: {SKY}; }}
+[data-testid="stHeader"] {{ background: transparent; }}
+h1, h2, h3 {{ font-family: {FONT} !important; color: {INK}; letter-spacing: -0.02em; font-weight: 800 !important; }}
+h3 {{ font-size: 1.15rem !important; margin-top: 0.8rem !important; }}
+.block-container {{ padding-top: 1.4rem; max-width: 1420px; }}
+.stMarkdown p, .stMarkdown li {{ line-height: 1.55; }}
+.band {{ position: relative; overflow: hidden; background: {CARD}; border-radius: 24px; padding: 1.3rem 1.6rem 1.2rem;
+         margin-bottom: 1.1rem; box-shadow: {SHADOW}; display: flex; justify-content: space-between; align-items: center;
+         gap: 1rem; flex-wrap: wrap; }}
+.band h1 {{ color: {INK} !important; margin: 0 !important; font-size: 1.75rem !important; line-height: 1.2 !important; max-width: 46ch; }}
+.band .sub {{ color: {MUTE}; font-size: 0.95rem; margin-top: 0.35rem; max-width: 80ch; }}
+.band .wave {{ position: absolute; right: 0; bottom: 0; width: 40%; height: 100%; pointer-events: none; }}
+.band > div:not(:last-child) {{ max-width: 62%; }}
+.band > div {{ position: relative; z-index: 1; }}
+.chip {{ display: inline-block; padding: 0.18rem 0.7rem; border-radius: 999px; font-size: 0.8rem; font-weight: 700; color: #fff; }}
+.chip.live {{ background: {MIST}; color: {BLUE}; border: 1px solid #D3E0FA; font-variant-numeric: tabular-nums; }}
+.kpi {{ background: {CARD}; border-radius: 18px; padding: 1rem 1.1rem; height: 100%; box-shadow: {SHADOW}; }}
+.kpi .v {{ font-size: 2.1rem; font-weight: 800; line-height: 1.1; color: {INK}; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }}
+.kpi .l {{ color: {MUTE}; font-size: 0.86rem; font-weight: 600; }}
+.kpi .d {{ font-size: 0.82rem; margin-top: 0.2rem; color: {MUTE}; }}
+.card {{ background: {CARD}; border-radius: 18px; padding: 1rem 1.1rem; margin-bottom: 0.8rem; box-shadow: {SHADOW}; }}
+.alert {{ display: grid; grid-template-columns: 4.4rem 1fr; gap: 0.8rem; align-items: center; background: {CARD};
+          border-left: 4px solid; border-radius: 14px; padding: 0.65rem 0.9rem; margin-bottom: 0.5rem; box-shadow: {SHADOW}; }}
+.alert .pct {{ font-size: 1.4rem; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }}
+.alert .who {{ font-weight: 700; color: {INK}; }}
+.alert .why {{ color: {MUTE}; font-size: 0.87rem; }}
+.rule {{ border-left: 4px solid; padding: 0.5rem 0.8rem; margin: 0.35rem 0; background: {CARD}; border-radius: 0 12px 12px 0;
+         box-shadow: {SHADOW}; }}
+.muted {{ color: {MUTE}; font-size: 0.9rem; }}
+.vital {{ background: {CARD}; border-radius: 16px; padding: 0.8rem 1rem; box-shadow: {SHADOW}; }}
+.vital .n {{ color: {MUTE}; font-size: 0.84rem; font-weight: 600; }}
+.vital .x {{ font-size: 1.7rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }}
+.howto {{ background: #E2F6F3; border-radius: 18px; padding: 0.85rem 1.1rem; margin-bottom: 1.1rem; color: #12443F; }}
+.howto b.h {{ color: #0E7F74; }}
+.howto ul {{ margin: 0.35rem 0 0 0; padding-left: 1.2rem; }}
+.howto li {{ margin-bottom: 0.2rem; }}
 .legend span {{ display: inline-block; margin-right: 0.4rem; }}
+.card table {{ border-collapse: collapse; width: 100%; }}
+.card td, .card th, .card tr {{ border: none !important; }}
+.card tr + tr td {{ border-top: 1px solid {LINE} !important; }}
+.card td {{ padding: 0.3rem 0.6rem 0.3rem 0 !important; vertical-align: top; }}
+[data-testid="stPlotlyChart"], [data-testid="stDataFrame"] {{ background: {CARD}; border-radius: 18px; padding: 0.4rem; box-shadow: {SHADOW}; }}
+[data-testid="stExpander"] details {{ background: {CARD}; border-radius: 14px; border: none; box-shadow: {SHADOW}; }}
+.stButton > button, .stDownloadButton > button, [data-testid="stFormSubmitButton"] > button {{ border-radius: 12px; font-weight: 700; }}
+[data-testid="stFormSubmitButton"] > button[kind="primaryFormSubmit"], .stButton > button[kind="primary"] {{ background: {INDIGO}; border-color: {INDIGO}; }}
+[data-testid="stForm"] {{ background: {CARD}; border: none; border-radius: 20px; box-shadow: {SHADOW}; }}
+section[data-testid="stSidebar"] {{ background: {CARD}; border-right: 1px solid {LINE}; }}
+section[data-testid="stSidebar"] [role="radiogroup"] {{ gap: 0.15rem; width: 100%; }}
+section[data-testid="stSidebar"] [data-testid="stRadio"] > div {{ width: 100%; }}
+section[data-testid="stSidebar"] [role="radiogroup"] label {{ padding: 0.55rem 0.8rem; border-radius: 12px; margin: 0;
+         width: 100% !important; display: flex !important; border-left: 3px solid transparent; }}
+section[data-testid="stSidebar"] [role="radiogroup"] label > div > div:first-child:not([data-testid]) {{ display: none; }}
+section[data-testid="stSidebar"] [role="radiogroup"] label:hover {{ background: {MIST}; }}
+section[data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) {{ background: #EEF2FF; border-left-color: {INDIGO}; }}
+section[data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) p {{ color: {INDIGO}; font-weight: 700; }}
+.brand {{ display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.2rem; }}
+.brand .mark {{ width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, {BLUE}, {TEAL});
+                display: grid; place-items: center; }}
+.brand .name {{ font-weight: 800; font-size: 1.25rem; color: {INK}; letter-spacing: -0.02em; line-height: 1; }}
+.brand .tag {{ color: {MUTE}; font-size: 0.78rem; }}
+:focus-visible {{ outline: 2px solid {BLUE}; outline-offset: 2px; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -116,8 +153,27 @@ def pct(x):
     return f"{x:.1%}" if x < 0.1 else f"{x:.0%}"
 
 
+def _breath_path(w=600, h=120, cycles=4.5, pts=360):
+    """A calm breathing trace, as a chest-band sensor draws it: smooth breaths with a slightly longer exhale."""
+    xs = np.linspace(0, 1, pts)
+    ph = 2 * np.pi * xs * cycles
+    y = 0.5 - 0.5 * np.cos(ph + 0.35 * np.sin(ph))          # skewed cosine: quicker inhale, slower exhale
+    y = y * (0.8 + 0.2 * np.sin(2 * np.pi * xs * 1.3))      # breath-to-breath depth varies a little
+    return "M" + " L".join(f"{x * w:.1f},{h - 14 - v * (h * 0.42):.1f}" for x, v in zip(xs, y))
+
+
+BREATH = _breath_path()
+WAVE_SVG = (f'<svg class="wave" viewBox="0 0 600 120" preserveAspectRatio="none" aria-hidden="true">'
+            f'<defs><linearGradient id="bw" x1="0" x2="1"><stop offset="0" stop-color="{BLUE}" stop-opacity="0"/>'
+            f'<stop offset="0.45" stop-color="{BLUE}" stop-opacity="0.45"/><stop offset="1" stop-color="{TEAL}"/></linearGradient>'
+            f'<linearGradient id="bf" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="{TEAL}" stop-opacity="0.10"/>'
+            f'<stop offset="1" stop-color="{TEAL}" stop-opacity="0"/></linearGradient></defs>'
+            f'<path d="{BREATH} L600,120 L0,120 Z" fill="url(#bf)"/>'
+            f'<path d="{BREATH}" fill="none" stroke="url(#bw)" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>')
+
+
 def band(title, sub):
-    st.markdown(f'<div class="band"><div><h1>{title}</h1><div class="sub">{sub}</div></div>'
+    st.markdown(f'<div class="band">{WAVE_SVG}<div><h1>{title}</h1><div class="sub">{sub}</div></div>'
                 f'<div><span class="chip live">Replaying {day:%d %b %Y}</span></div></div>', unsafe_allow_html=True)
 
 
@@ -157,8 +213,8 @@ def howto(title, points):
 
 def base_layout(fig, h, title=None, **kw):
     fig.update_layout(height=h, margin=dict(l=8, r=8, t=36 if title else 8, b=8), plot_bgcolor="white",
-                      paper_bgcolor="white", font=dict(family="Atkinson Hyperlegible, sans-serif", color=INK, size=12),
-                      title=dict(text=title, font=dict(size=14, family="Source Serif 4, serif")) if title else None, **kw)
+                      paper_bgcolor="white", font=dict(family=FONT, color=INK, size=12),
+                      title=dict(text=title, font=dict(size=14, family=FONT, weight=700)) if title else None, **kw)
     fig.update_xaxes(showgrid=False, linecolor=LINE)
     fig.update_yaxes(gridcolor=MIST, zeroline=False)
     return fig
@@ -169,13 +225,13 @@ def gauge(prob, ref=None, h=230, title="Flare-up risk, next 3 days", level=None)
     top = min(1.0, max(0.6, prob * 1.15))
     fig = go.Figure(go.Indicator(
         mode="gauge+number" + ("+delta" if ref is not None else ""), value=prob * 100,
-        number=dict(suffix="%", valueformat=".1f", font=dict(size=40, family="Source Serif 4, serif", color=RISK[lv])),
+        number=dict(suffix="%", valueformat=".1f", font=dict(size=40, family=FONT, color=RISK[lv], weight=800)),
         delta=dict(reference=ref * 100, valueformat=".1f", suffix=" pts", increasing=dict(color=UP), decreasing=dict(color=DOWN))
         if ref is not None else None,
         gauge=dict(axis=dict(range=[0, top * 100], ticksuffix="%", tickcolor=LINE), bar=dict(color=RISK[lv], thickness=0.28),
                    bgcolor="white", borderwidth=0,
-                   steps=[dict(range=[0, THR * 50], color="#E3EEE7"), dict(range=[THR * 50, THR * 100], color="#F5EBD6"),
-                          dict(range=[THR * 100, top * 100], color="#F3DEDB")],
+                   steps=[dict(range=[0, THR * 50], color="#E3F5EE"), dict(range=[THR * 50, THR * 100], color="#FDF1DE"),
+                          dict(range=[THR * 100, top * 100], color="#FDE4E7")],
                    threshold=dict(line=dict(color=INK, width=2), thickness=0.8, value=THR * 100)),
         title=dict(text=title, font=dict(size=13))))
     return base_layout(fig, h)
@@ -204,7 +260,7 @@ def push_chart(groups, h=330):
     return fig
 
 
-RULE_COLORS = {"urgent": "#B23A2E", "warning": "#C98A1B", "watch": "#8C7B55"}
+RULE_COLORS = {"urgent": RISK["Urgent"], "warning": RISK["Medium"], "watch": "#8C93B8"}
 NO_SINGLE_SIGN = ("No single reading has crossed a warning line yet, but several smaller changes together raise the risk. "
                   "See <b>what is pushing the risk</b>.")
 VERY_HIGH = 0.6
@@ -216,15 +272,15 @@ def show_checks(rules, prob, limit=None):
         for kind, text in rules[:limit]:
             st.markdown(f'<div class="rule" style="border-color:{RULE_COLORS[kind]}">{text}</div>', unsafe_allow_html=True)
     elif risk_level(prob) in ("High", "Medium"):
-        st.markdown(f'<div class="rule" style="border-color:#C98A1B">{NO_SINGLE_SIGN}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="rule" style="border-color:{RISK['Medium']}">{NO_SINGLE_SIGN}</div>', unsafe_allow_html=True)
     else:
-        st.markdown('<div class="rule" style="border-color:#5B8A72">All readings within own normal range</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="rule" style="border-color:{RISK["Low"]}">All readings within own normal range</div>', unsafe_allow_html=True)
 
 
 def show_scenarios(prob, scenarios):
     """What would lower the risk; when risk is already very high, say so instead of showing 98% -> 98%."""
     if prob >= VERY_HIGH:
-        st.markdown(f'<div class="rule" style="border-color:#B23A2E"><b>Risk is already very high ({pct(prob)}).</b> '
+        st.markdown(f'<div class="rule" style="border-color:{RISK['High']}"><b>Risk is already very high ({pct(prob)}).</b> '
                     "Contact the doctor today. Staying indoors and taking every inhaler dose still help, but they will not "
                     "stop a flare-up that may already be starting.</div>", unsafe_allow_html=True)
         return
@@ -243,7 +299,7 @@ def signal_chart(f, col, normal_col, title, sd):
     return base_layout(fig, 200, title, showlegend=False)
 
 
-ADV_STYLE = {"severe": ("#B23A2E", "#F8E5E2"), "warning": ("#C98A1B", "#FBF1DD"), "ok": ("#5B8A72", "#E6F0EA")}
+ADV_STYLE = {"severe": ("#EC4A5A", "#FDECEE"), "warning": ("#F0A23B", "#FEF5E6"), "ok": ("#18A06F", "#E5F6EF")}
 FORECAST_NOTE = ("In this demo the 'forecast' is the real recorded air and weather for the next days of 2019-20. "
                  "A live version would use an air-quality forecast service with the same rules.")
 
@@ -260,6 +316,153 @@ def advisory_card(s, show_risk=True):
                 unsafe_allow_html=True)
 
 
+# ------------------------------------------------------------------ wearable and phone mock-ups
+PATIENT_SAYS = {
+    "Low": "Your lungs look steady today. Keep your usual routine.",
+    "Medium": "A few readings are off your normal. Take your daily inhaler and rest a little more.",
+    "High": "Your readings suggest a flare-up may be coming. Your doctor's team will call you today.",
+    "Urgent": "Your oxygen is low. Call your doctor or go to hospital now.",
+    "In flare-up": "You are in a flare-up. Follow your action plan and stay in touch with your doctor.",
+}
+AQI_DOT = {"Good": "#18A06F", "Satisfactory": "#8CC63F", "Moderate": "#F2C94C", "Poor": "#F0A23B",
+           "Very Poor": "#EC4A5A", "Severe": "#7A1F4A"}
+
+
+def _ring(frac, color, size=176, width=12):
+    r = (size - width) / 2
+    c = 2 * np.pi * r
+    return (f"<svg width='{size}' height='{size}' viewBox='0 0 {size} {size}' style='position:absolute;inset:0;margin:auto'>"
+            f"<circle cx='{size/2}' cy='{size/2}' r='{r}' fill='none' stroke='#1D2850' stroke-width='{width}'/>"
+            f"<circle cx='{size/2}' cy='{size/2}' r='{r}' fill='none' stroke='{color}' stroke-width='{width}' stroke-linecap='round' "
+            f"stroke-dasharray='{c * frac:.1f} {c:.1f}' transform='rotate(-90 {size/2} {size/2})'/></svg>")
+
+
+def device_mockups(pid, day):
+    """Three screens built from one patient's real twin output for the chosen day: watch face, watch alert, phone app."""
+    p = P.loc[pid]
+    a = assess_cached(pid, day)
+    r = a["row"]
+    lv = a["level"]
+    col = RISK.get(lv, BLUE)
+    first = p.display_name.split()[0]
+    spo2, rr, hr = r.spo2_pct, r.resp_rate_bpm, r.heart_rate_bpm
+    fmt = lambda v, f: f.format(v) if pd.notna(v) else "--"
+    frac = 1.0 if lv in ("Urgent", "In flare-up") else float(np.clip(a["prob"] / (2 * THR), 0.06, 1))
+    big = "Urgent" if lv == "Urgent" else pct(a["prob"])
+
+    watch = (f"<div class='dev'><div class='watch'><div class='strap t'></div><div class='strap b'></div><div class='face'>{_ring(frac, col)}"
+             f"<div class='in'><div class='lbl'>Lungs today</div><div class='big' style='color:{col}'>{big}</div>"
+             f"<div class='lbl'>{lv if lv != 'Urgent' else 'oxygen ' + fmt(spo2, '{:.1f}') + '%'}{' risk' if lv in ('Low', 'Medium', 'High') else ''}</div>"
+             f"<div class='cx'><span>O₂ {fmt(np.floor(spo2) if pd.notna(spo2) else spo2, '{:.0f}')}%</span><span>{fmt(rr, '{:.0f}')}/min</span><span>♥ {fmt(hr, '{:.0f}')}</span></div>"
+             f"</div></div></div><div class='cap'><b>Watch face.</b> Today's flare-up risk as a ring, with oxygen, breathing and heart rate.</div></div>")
+
+    s_ = summarise(p.city, outlook(env, p.city, day))
+    urgent = [t for k, t in a["rules"] if k == "urgent"]
+    if lv == "Urgent":
+        msg, btn, tone = f"{urgent[0] if urgent else 'Oxygen below 90%'}. Call your doctor now.", ("Call doctor", "Later"), RISK["Urgent"]
+    elif lv == "High":
+        why = a["triggers"][0]["text"] if a["triggers"] else "Several readings are off your normal"
+        msg, btn, tone = f"{why}. A flare-up may be coming. Your doctor has been told.", ("Start action plan", "OK"), RISK["High"]
+    elif s_ and s_["level"] != "ok":
+        w = s_["worst"]
+        msg, btn, tone = (f"Smog on {w['date']:%A}: PM2.5 {w['pm25']:.0f}. Keep windows shut and take your daily inhaler.",
+                          ("Got it", "Tips"), RISK["Medium"])
+    else:
+        msg, btn, tone = "Time for your evening inhaler dose.", ("Taken", "Snooze"), TEAL
+    alert = (f"<div class='dev'><div class='watch sq'><div class='strap t'></div><div class='strap b'></div><div class='face sq'>"
+             f"<div class='nt'><span class='app' style='background:{tone}'></span>BreatheTwin<span class='tm'>8:05</span></div>"
+             f"<div class='msg'>{html.escape(msg)}</div>"
+             f"<div class='btn' style='background:{tone}'>{btn[0]}</div><div class='btn ghost'>{btn[1]}</div>"
+             f"</div></div><div class='cap'><b>Watch alert.</b> One plain instruction when something needs action.</div></div>")
+
+    def vs(label, now, normal, unit, worse_up=True, f="{:.0f}", tol=1.0):
+        if pd.isna(now) or pd.isna(normal):
+            return f"<div class='vr'><span>{label}</span><b>--</b></div>"
+        d = now - normal
+        bad = d > 0 if worse_up else d < 0
+        tag = "about usual" if abs(d) < tol else ("higher" if d > 0 else "lower") + " than usual"
+        c = UP if bad and tag != "about usual" else MUTE
+        return (f"<div class='vr'><span>{label}</span><b>{f.format(now)}{unit}</b>"
+                f"<em style='color:{c}'>{tag}</em></div>")
+    rows = (vs("Breathing", rr, r.rr_normal, "/min", True, "{:.1f}", 1.5) + vs("Oxygen", spo2, r.spo2_normal, "%", False, "{:.1f}", 1.0)
+            + vs("Heart rate", hr, r.hr_normal, " bpm", True, "{:.0f}", 4) + vs("Steps", r.steps, r.steps_normal, " steps", False, "{:.0f}", 600))
+    helps = ""
+    if lv not in ("Urgent", "In flare-up"):
+        best = sorted(((k, v) for k, v in a["scenarios"].items() if k != "Both"), key=lambda kv: kv[1])
+        cut = [(k, (v - a["prob"]) / a["prob"] * 100) for k, v in best if a["prob"] > 0]
+        cut = [(k, c) for k, c in cut if c <= -5]
+        helps = ("".join(f"<li>{k}<span>{c:+.0f}% risk</span></li>" for k, c in cut) if cut
+                 else "<li>Keep taking your daily inhaler and stay active.</li>")
+        helps = f"<div class='sec'>What helps today</div><ul class='hl'>{helps}</ul>"
+    days = "".join(f"<div class='dy'><span>{o['date']:%a}</span><i style='background:{AQI_DOT.get(o['category'], MUTE)}'></i>"
+                   f"<b>{o['pm25']:.0f}</b><small>{o['temp_min_c']:.0f}°</small></div>" for o in outlook(env, p.city, day))
+    taken, presc = r.controller_doses_taken, r.controller_doses_prescribed
+    phone = (f"<div class='dev'><div class='phone'><div class='notch'></div><div class='scr'>"
+             f"<div class='sb'><span>8:05</span><span>{p.city}</span></div>"
+             f"<div class='hi'>Good morning, {html.escape(first)}</div>"
+             f"<div class='rk' style='border-color:{col}'><div><div class='lbl2'>My lungs today</div>"
+             f"<div class='rv' style='color:{col}'>{lv}</div></div>"
+             + (f"<div class='rp' style='color:{col}'>{fmt(spo2, '{:.1f}')}%<small>oxygen, below 90%</small></div>" if lv == "Urgent"
+                else f"<div class='rp'>{pct(a['prob'])}<small>chance of a flare-up in 3 days</small></div>")
+             + f"<p>{PATIENT_SAYS.get(lv, '')}</p></div>"
+             f"<div class='sec'>Today vs your normal</div>{rows}{helps}"
+             f"<div class='sec'>Air in {p.city}, next 3 days (PM2.5)</div><div class='days'>{days}</div>"
+             f"<div class='acts'><div>Log a rescue puff</div><div>30-second breathing count</div></div>"
+             f"<div class='sec' style='margin-top:0.5rem'>Daily inhaler: {int(taken) if pd.notna(taken) else 0} of {int(presc)} doses today</div>"
+             f"</div></div><div class='cap'><b>Phone app.</b> What the patient and family see, in plain words.</div></div>")
+
+    css = f"""<style>
+.devs {{ display:flex; flex-wrap:wrap; gap:1.6rem; align-items:flex-start; justify-content:center; background:linear-gradient(160deg,#F4F8FF,#E6F6F4);
+        border-radius:24px; padding:1.6rem 1rem 1.2rem; box-shadow:{SHADOW}; margin-bottom:1rem; }}
+.dev {{ display:flex; flex-direction:column; align-items:center; width:262px; }}
+.cap {{ color:{MUTE}; font-size:0.85rem; text-align:center; margin-top:0.8rem; max-width:260px; }}
+.cap b {{ color:{INK}; }}
+.watch {{ position:relative; width:212px; height:300px; display:grid; place-items:center; }}
+.strap {{ position:absolute; left:50%; transform:translateX(-50%); width:118px; height:64px; background:#2B3554; }}
+.strap.t {{ top:0; border-radius:18px 18px 6px 6px; }} .strap.b {{ bottom:0; border-radius:6px 6px 18px 18px; }}
+.face {{ position:relative; width:200px; height:200px; border-radius:50%; background:#0E1530; border:7px solid #3A4466;
+        box-shadow:0 10px 30px rgba(14,21,48,0.35); display:grid; place-items:center; color:#fff; }}
+.face .in {{ position:relative; text-align:center; }}
+.face .lbl {{ font-size:0.68rem; color:#A9B4D6; }}
+.face .big {{ font-size:1.9rem; font-weight:800; letter-spacing:-0.03em; line-height:1.1; font-variant-numeric:tabular-nums; }}
+.face .cx {{ display:flex; gap:0.45rem; justify-content:center; margin-top:0.35rem; font-size:0.62rem; color:#DCE3F7; }}
+.face.sq {{ width:196px; height:220px; border-radius:46px; display:block; padding:1rem 0.9rem; text-align:left; }}
+.nt {{ display:flex; align-items:center; gap:0.4rem; font-size:0.72rem; color:#A9B4D6; font-weight:700; }}
+.nt .app {{ width:16px; height:16px; border-radius:5px; display:inline-block; }}
+.nt .tm {{ margin-left:auto; font-weight:500; }}
+.msg {{ font-size:0.8rem; line-height:1.35; margin:0.55rem 0 0.6rem; color:#fff; min-height:5.4em; }}
+.btn {{ display:block; width:100%; box-sizing:border-box; border-radius:999px; text-align:center; font-size:0.74rem; font-weight:700; padding:0.32rem; margin-top:0.3rem; color:#fff; }}
+.btn.ghost {{ background:#26304F; color:#DCE3F7; }}
+.phone {{ position:relative; width:262px; border-radius:38px; background:#121A33; padding:10px; box-shadow:0 14px 36px rgba(18,26,51,0.3); }}
+.notch {{ position:absolute; top:14px; left:50%; transform:translateX(-50%); width:78px; height:18px; border-radius:12px; background:#121A33; z-index:2; }}
+.scr {{ background:{SKY}; border-radius:30px; padding:2.1rem 0.85rem 0.9rem; font-size:0.78rem; color:{INK}; }}
+.sb {{ position:absolute; top:16px; left:30px; right:30px; display:flex; justify-content:space-between; font-size:0.62rem; color:{MUTE}; font-weight:700; }}
+.hi {{ font-weight:800; font-size:1rem; margin-bottom:0.5rem; letter-spacing:-0.02em; }}
+.rk {{ background:#fff; border-radius:16px; padding:0.7rem 0.75rem; border-top:4px solid; display:flex; flex-wrap:wrap; justify-content:space-between; gap:0.3rem; }}
+.rk p {{ margin:0.35rem 0 0; color:{MUTE}; font-size:0.74rem; line-height:1.35; flex-basis:100%; }}
+.lbl2 {{ font-size:0.66rem; color:{MUTE}; font-weight:600; }}
+.rv {{ font-size:1.25rem; font-weight:800; letter-spacing:-0.02em; }}
+.rp {{ text-align:right; font-weight:800; font-size:1.1rem; font-variant-numeric:tabular-nums; }}
+.rp small {{ display:block; font-size:0.6rem; color:{MUTE}; font-weight:500; max-width:92px; }}
+.sec {{ font-size:0.68rem; color:{MUTE}; font-weight:700; margin:0.7rem 0 0.3rem; }}
+.vr {{ display:grid; grid-template-columns:1fr auto; background:#fff; border-radius:10px; padding:0.35rem 0.6rem; margin-bottom:0.25rem; }}
+.vr b {{ font-variant-numeric:tabular-nums; }}
+.vr em {{ grid-column:1 / span 2; font-style:normal; font-size:0.64rem; }}
+.hl {{ list-style:none; margin:0 !important; padding:0 !important; }}
+.hl li {{ margin-left:0 !important; background:#fff; border-radius:10px; padding:0.35rem 0.6rem; margin-bottom:0.25rem; display:flex; justify-content:space-between; gap:0.4rem; }}
+.hl li span {{ color:{DOWN}; font-weight:700; white-space:nowrap; }}
+.days {{ display:grid; grid-template-columns:repeat(3,1fr); gap:0.3rem; }}
+.dy {{ background:#fff; border-radius:10px; padding:0.35rem; text-align:center; display:flex; flex-direction:column; align-items:center; gap:0.1rem; }}
+.dy i {{ width:10px; height:10px; border-radius:50%; display:block; }}
+.dy small {{ color:{MUTE}; }}
+.acts {{ display:grid; grid-template-columns:1fr 1fr; gap:0.3rem; margin-top:0.6rem; }}
+.acts div {{ background:{INDIGO}; color:#fff; border-radius:12px; padding:0.45rem; text-align:center; font-weight:700; font-size:0.7rem; }}
+.acts div + div {{ background:{TEAL}; }}
+</style>"""
+    css = "\n".join(l for l in css.splitlines() if l.strip())
+    st.markdown(css + f"<div class='devs'>{watch}{alert}{phone}</div>", unsafe_allow_html=True)
+
+
 def record_tags(p):
     """Short health-record facts that matter for flare-up risk, for cards and headers."""
     tags = [f"GOLD {int(p.gold_stage)}"]
@@ -269,6 +472,10 @@ def record_tags(p):
         tags.append("smokes" + (f" ({p.tobacco_type})" if p.tobacco_type not in ("none", "") else ""))
     if p.biomass_fuel_exposure:
         tags.append("cooking smoke")
+    if p.get("serpina1_variant", 0):
+        tags.append("alpha-1 gene variant")
+    if p.get("past_tuberculosis", 0) == 1:
+        tags.append("past TB")
     if p.blood_eosinophils_per_ul >= 300:
         tags.append(f"high eosinophils {int(p.blood_eosinophils_per_ul)}")
     conds = int(sum(p.get(c, 0) for c in ["hypertension", "diabetes", "ischemic_heart_disease", "heart_failure", "anemia"]))
@@ -310,8 +517,12 @@ OTHER_CITIES = {"Jaipur": (26.91, 75.79), "Ahmedabad": (23.02, 72.57), "Pune": (
                 "Visakhapatnam": (17.69, 83.22), "Indore": (22.72, 75.86), "Ranchi": (23.34, 85.31), "Thiruvananthapuram": (8.52, 76.94)}
 
 # ------------------------------------------------------------------ sidebar
-st.sidebar.markdown(f"<h2 style='margin:0'>BreatheTwin</h2><div class='muted'>COPD digital twin · Team MOMENTUM</div>",
-                    unsafe_allow_html=True)
+st.sidebar.markdown(
+    "<div class='brand'><div class='mark'><svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='white' "
+    "stroke-width='2' stroke-linecap='round'><path d='M12 4v7'/><path d='M12 11c-2 0-3 1.5-4 3.5S5 20 4 20c-1 0-1.5-3 "
+    "-.5-7S6 6 8 6c1.5 0 2 1.5 2 3'/><path d='M12 11c2 0 3 1.5 4 3.5s3 5.5 4 5.5c1 0 1.5-3 .5-7S18 6 16 6c-1.5 0-2 1.5-2 3'/>"
+    "</svg></div><div><div class='name'>BreatheTwin</div><div class='tag'>COPD digital twin by Team MOMENTUM</div></div></div>",
+    unsafe_allow_html=True)
 PAGE_LABEL = {"Command centre": "Overview: all patients", "Patient twin": "One patient in detail",
               "Twin Lab (what-if)": "What-if lab", "Add a patient": "Check a new person", "Devices": "Devices and sensors", "Model and evidence": "How it works"}
 st.sidebar.markdown("<p class='muted' style='margin-top:0.4rem'>Warns doctors and families 1 to 3 days before a COPD "
@@ -395,8 +606,8 @@ if page == "Command centre":
             hovertemplate="<b>%{text}</b><br>%{customdata[0]} high-risk of %{customdata[1]}<br>PM2.5 %{customdata[2]:.0f} µg/m³"
                           "<br>Night low %{customdata[3]:.0f}°C<extra></extra>"))
         fig.update_geos(scope="asia", projection_type="mercator", lataxis_range=[7, 34], lonaxis_range=[67, 95],
-                        showcountries=True, countrycolor="#9FB3C0", showland=True, landcolor="#F4F7F9",
-                        showocean=True, oceancolor="#DCE8EF", showframe=False, resolution=50)
+                        showcountries=True, countrycolor="#B8C6E0", showland=True, landcolor="#F6F9FE",
+                        showocean=True, oceancolor="#DDE9FB", showframe=False, resolution=50)
         base_layout(fig, 430)
         fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
         st.plotly_chart(fig, use_container_width=True)
@@ -406,7 +617,7 @@ if page == "Command centre":
         st.markdown("### Call these patients today")
         st.markdown("<p class='muted'>The % is the chance of a flare-up in the next 3 days. The grey line is the main reason. "
                     "Open <b>One patient in detail</b> to see the full picture.</p>", unsafe_allow_html=True)
-        bands = {"All ages": (0, 200), "30-44": (30, 44), "45-59": (45, 59), "60-74": (60, 74), "75 and over": (75, 200)}
+        bands = {"All ages": (0, 200), "Under 30": (0, 29), "30-44": (30, 44), "45-59": (45, 59), "60-74": (60, 74), "75 and over": (75, 200)}
         band_pick = st.radio("Age group", list(bands), horizontal=True, label_visibility="collapsed")
         lo, hi = bands[band_pick]
         shown = (active[active.age.between(lo, hi)].assign(urg=lambda d: d.level.eq("Urgent"))
@@ -497,7 +708,7 @@ elif page == "Patient twin":
             now, norm = r[colname], r[f"{s}_normal"]
             d = (now - norm) if pd.notna(now) else np.nan
             bad = (d < 0) if good_up else (d > 0)
-            colr = UP if bad and abs(d) > {"rr": 1.5, "spo2": 1, "hr": 4, "steps": 600}[s] else DOWN if pd.notna(d) else "#536673"
+            colr = UP if bad and abs(d) > {"rr": 1.5, "spo2": 1, "hr": 4, "steps": 600}[s] else DOWN if pd.notna(d) else MUTE
             col.markdown(f'<div class="vital"><div class="n">{name}</div><div class="x">{now:{fmt}}<span class="muted"> {unit}</span></div>'
                          f'<div class="d" style="color:{colr}">{d:+{fmt}} vs own normal {norm:{fmt}}</div></div>' if pd.notna(now)
                          else f'<div class="vital"><div class="n">{name}</div><div class="x">no data</div><div class="muted">watch not worn</div></div>',
@@ -540,6 +751,8 @@ elif page == "Patient twin":
         ("Smoking", p.smoking_status + (f" ({p.tobacco_type})" if p.tobacco_type != "none" else "")),
         ("Cooking smoke at home", yn(p.biomass_fuel_exposure)),
         ("Alpha-1 gene variant", yn(p.serpina1_variant)),
+        ("Past tuberculosis", yn(p.get("past_tuberculosis", 0) == 1)),
+        ("Why COPD this young", p.get("early_onset_cause") if isinstance(p.get("early_onset_cause"), str) else None),
         ("City", f"{p.city} ({p.region})")])
     rec_card(e3, "Tests and other conditions", [
         ("Blood eosinophils", f"{p.blood_eosinophils_per_ul} cells/µL" + (" (high)" if p.blood_eosinophils_per_ul >= 300 else "")),
@@ -578,7 +791,7 @@ elif page == "Patient twin":
     with c2:
         sh = history_cached(pid, day).tail(90)
         fig = go.Figure()
-        fig.add_hrect(y0=THR, y1=max(0.6, sh.risk.max() * 1.1), fillcolor="#F3DEDB", opacity=0.45, line_width=0)
+        fig.add_hrect(y0=THR, y1=max(0.6, sh.risk.max() * 1.1), fillcolor="#FDE4E7", opacity=0.6, line_width=0)
         fig.add_trace(go.Scatter(x=sh.date, y=sh.risk, line=dict(color=TEAL, width=2.4), fill="tozeroy",
                                  fillcolor="rgba(31,95,122,0.08)", name="3-day risk"))
         for d0 in events[(events.patient_id == pid) & events.onset_date.between(sh.date.min(), day)].onset_date:
@@ -689,7 +902,7 @@ elif page == "Twin Lab (what-if)":
             st.toggle("Current smoker", key="lab_smoker")
             st.toggle("Cooking smoke exposure", key="lab_biomass")
             st.toggle("Flu vaccine this year", key="lab_vacc")
-            st.slider("Age (years)", 30, 100, key="lab_age")
+            st.slider("Age (years)", 22, 100, key="lab_age")
             st.slider("Blood eosinophils (cells/µL)", 0, 1000, step=10, key="lab_eos",
                       help="From a routine blood count. 300 or more is high and linked to more flare-ups.")
             st.slider("Number of other long-term conditions", 0, 6, key="lab_comorb",
@@ -726,7 +939,7 @@ elif page == "Twin Lab (what-if)":
             st.plotly_chart(gauge(prob, ref=a["prob"], title="Risk with your changes (delta vs real today)"), use_container_width=True)
         with o2:
             lv = risk_level(prob)
-            st.markdown(f"<div class='card'><div class='muted'>Twin verdict</div><div style='font-family:Source Serif 4,serif;"
+            st.markdown(f"<div class='card'><div class='muted'>Twin verdict</div><div style='font-weight:800;"
                         f"font-size:1.5rem;margin:0.2rem 0'>{chip(lv)} {'Call the patient today' if lv == 'High' else 'Watch closely' if lv == 'Medium' else 'Routine follow-up'}</div>"
                         f"<div class='muted'>Real risk today {a['prob']:.1%} · with changes {prob:.1%} · "
                         f"{'x%.1f' % (prob / a['prob']) if a['prob'] > 0 else ''}</div></div>", unsafe_allow_html=True)
@@ -833,8 +1046,9 @@ elif page == "Add a patient":
         if model_city != city_in:
             st.info(f"{city_in} uses weather (and replay air quality) from {model_city}, the nearest monitored city in this demo.")
         if age < 30:
-            st.warning("COPD is very rare under 30 and almost never diagnosed in children. The model was trained on patients aged "
-                       "30 to 92, so for younger patients it treats age as if they were the youngest in training. "
+            st.warning("COPD is rare under 30 and almost never diagnosed in children. Young patients usually have a clear cause: "
+                       "alpha-1 antitrypsin deficiency, lung damage after tuberculosis, or heavy cooking smoke since childhood. "
+                       "The model was trained on patients aged 22 to 92 (20 of them under 30); below 22 it treats age as 22. "
                        "Read the result with care.")
         prescribed = 2 if maint else 0
         row = {"patient_id": "NEW-0001", "display_name": name, "age": age, "sex": sex, "city": model_city, "gold_stage": gold,
@@ -930,6 +1144,21 @@ elif page == "Devices":
         "Honest note: in this prototype the watch, oximeter and inhaler readings are simulated or typed in; the device links "
         "below are the integration plan using each platform's published data interface. Air and weather data are already real.",
     ])
+    st.markdown("### What the patient sees on the watch and phone")
+    st.markdown("<p class='muted'>Design mock-ups, filled with one patient's real twin output for the replay date. "
+                "Pick a patient type to see how the screens change.</p>", unsafe_allow_html=True)
+    kinds = {"Low risk": ["Low"], "High risk": ["High"], "Urgent: oxygen below 90%": ["Urgent"]}
+    kind = st.radio("Show the screens for", list(kinds), horizontal=True, label_visibility="collapsed")
+    pool = today[today.level.isin(kinds[kind])].sort_values("risk", ascending=kind != "Low risk")
+    show_day = day
+    if pool.empty:                                   # urgent days are rare: jump to the nearest one in the replay year
+        cand = risk[risk.level.isin(kinds[kind])].assign(gap=lambda d: (d.date - day).abs()).sort_values("gap")
+        if len(cand):
+            show_day = cand.date.iloc[0]
+            pool = cand.head(1)
+            st.caption(f"No patient is {kind.lower()} on {day:%d %b %Y}; showing the nearest day, {show_day:%d %b %Y}.")
+    if len(pool):
+        device_mockups(pool.patient_id.iloc[0], pd.Timestamp(show_day))
     st.markdown("### Three ways to equip a patient")
     kc = st.columns(3)
     for col, (name, kit, gives) in zip(kc, KITS):
@@ -953,7 +1182,7 @@ elif page == "Devices":
     z = np.array(list(cover.values()))
     txt = np.where(z == 1, "✓", np.where(z == 0.5, "partial", ""))
     fig = go.Figure(go.Heatmap(z=z, x=cats, y=list(cover), text=txt, texttemplate="%{text}", textfont=dict(size=15, color="white"), showscale=False,
-                               colorscale=[[0, "#F4F7F9"], [0.5, "#79A6B7"], [1, TEAL]], xgap=3, ygap=3, hoverinfo="skip"))
+                               colorscale=[[0, "#F1F5FC"], [0.5, "#8FB0F7"], [1, BLUE]], xgap=3, ygap=3, hoverinfo="skip"))
     base_layout(fig, 330)
     fig.update_yaxes(autorange="reversed")
     fig.update_xaxes(side="top")
@@ -995,7 +1224,7 @@ else:
 
     l, rgt = st.columns(2)
     abl = pd.DataFrame(m["single_stream_ablation"]).T.reset_index().rename(columns={"index": "Streams used"})
-    fig = go.Figure(go.Bar(x=abl.auroc, y=abl["Streams used"], orientation="h", marker_color=[TEAL if "twin" in s else "#9FB7C2" for s in abl["Streams used"]],
+    fig = go.Figure(go.Bar(x=abl.auroc, y=abl["Streams used"], orientation="h", marker_color=[BLUE if "twin" in s else "#BCCDF2" for s in abl["Streams used"]],
                            text=abl.auroc, textposition="outside"))
     base_layout(fig, 300, "Prediction quality by data stream (AUROC)")
     fig.update_xaxes(range=[0.4, 1])
@@ -1012,9 +1241,9 @@ else:
     st.dataframe(pd.DataFrame([
         ["City air quality (PM2.5, AQI)", "Real", "2,928 city-days, 8 cities, CPCB stations (1 missing day filled)", "Training and dashboard"],
         ["Weather (temperature, humidity)", "Real", "2,928 city-days, Open-Meteo archive", "Training and dashboard"],
-        ["Health records", "Synthetic", "400 patients: 300 Synthea + 100 India overlay", "Training and dashboard"],
-        ["Watch, oximeter and inhaler readings", "Synthetic", "146,400 patient-days, simulated from published studies", "Training and dashboard"],
-        ["Flare-ups", "Synthetic", "473 simulated events", "Training labels"],
+        ["Health records", "Synthetic", "420 patients: 300 Synthea + 120 India overlay (20 under 30)", "Training and dashboard"],
+        ["Watch, oximeter and inhaler readings", "Synthetic", "153,720 patient-days, simulated from published studies", "Training and dashboard"],
+        ["Flare-ups", "Synthetic", "454 simulated events", "Training labels"],
         ["Real hospital patients (stress test)", "Real", "100 de-identified ICU patients, 47,214 vital-sign readings (MIMIC-III demo)", "Testing only, never training"],
         ["Real hospital patients (record check)", "Real", "14 COPD patients (MIMIC-IV demo), aggregate comparison", "Testing only"],
     ], columns=["Data", "Real or synthetic", "Size", "Used for"]), hide_index=True, use_container_width=True)
@@ -1063,7 +1292,7 @@ else:
         <li>The twin ran on every real patient with enough data, with no crash and no impossible output, including a missing oxygen sensor.</li>
         <li>Risk rises with real deterioration (rank correlation {stt['spearman_risk_vs_worsening_signs']}). Age 18 vs 90 and switching sex change risk very little; sex is not a model input.</li>
         <li>With the same number of warning signs, women were alerted somewhat more often than men; groups are small (5 to 19 people), so this needs a larger real cohort.</li>
-        <li>An oxygen drop alone barely moves the learned risk (82% scored 1.2%). Fixed with a safety override: oxygen below 90% now makes the patient <b>Urgent</b> and puts them at the top of the call list, whatever the model says. The learned model should still weight SpO2 more once real data is available.</li>
+        <li>An oxygen drop alone barely moves the learned risk (82% scored 2.0%). Fixed with a safety override: oxygen below 90% now makes the patient <b>Urgent</b> and puts them at the top of the call list, whatever the model says. The learned model should still weight SpO2 more once real data is available.</li>
         <li>Risk did not predict later in-hospital death (AUROC {stt['auroc_risk_for_later_in_hospital_death']}); death in intensive care is a different event from a COPD flare-up at home.</li>
         </ul></div>""", unsafe_allow_html=True)
 

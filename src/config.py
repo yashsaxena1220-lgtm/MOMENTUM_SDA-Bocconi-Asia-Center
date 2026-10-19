@@ -38,6 +38,14 @@ CITIES = {
 # (2) add younger synthetic patients (India overlay) so every adult generation is represented.
 GOLD_SHARES = {1: 0.15, 2: 0.42, 3: 0.30, 4: 0.13}          # ASSUMPTION: typical clinic mix (GOLD 2 most common)
 YOUNG_COHORT = {"age_bands": {(30, 39): 40, (40, 51): 60}}   # ASSUMPTION; COPD is rare below 30
+# Under-30 patients: rare, so every one carries a documented cause of early-onset COPD.
+# Causes: alpha-1 antitrypsin deficiency (Stoller & Aboussouan, Lancet 2005), lung damage after tuberculosis
+# (Byrne et al., Int J Infect Dis 2015) and heavy cooking smoke from childhood (Salvi & Barnes, Lancet 2009).
+# Cohort size and cause shares are ASSUMPTIONS.
+UNDER30_COHORT = {"age_band": (22, 29), "n": 20,
+                  "causes": {"Alpha-1 antitrypsin deficiency (SERPINA1 gene)": 0.30,
+                             "Lung damage after past tuberculosis": 0.35,
+                             "Heavy cooking smoke since childhood": 0.35}}
 
 # Synthea's COPD module diagnosis codes (SNOMED CT)
 COPD_SNOMED = {"87433001": "Pulmonary emphysema", "185086009": "Chronic obstructive bronchitis"}

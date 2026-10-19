@@ -116,9 +116,9 @@ Honest note: in this prototype the watch, oximeter and inhaler readings are simu
 |---|---|---|---|
 | City air quality (PM2.5, AQI) | **Real** | 2,928 city-days, 8 cities, CPCB (1 missing day filled) | Training and dashboard |
 | Weather (temperature, humidity) | **Real** | 2,928 city-days, Open-Meteo | Training and dashboard |
-| Health records | Synthetic | 400 patients (300 Synthea + 100 India overlay) | Training and dashboard |
-| Watch, oximeter and inhaler readings | Synthetic | 146,400 patient-days | Training and dashboard |
-| Flare-ups | Synthetic | 473 events | Training labels |
+| Health records | Synthetic | 420 patients (300 Synthea + 120 India overlay, 20 of them under 30) | Training and dashboard |
+| Watch, oximeter and inhaler readings | Synthetic | 153,720 patient-days | Training and dashboard |
+| Flare-ups | Synthetic | 454 events | Training labels |
 | Real hospital patients (stress test) | **Real** | 100 de-identified ICU patients, 47,214 vital-sign readings (MIMIC-III demo) | Testing only, never training |
 | Real COPD records (record check) | **Real** | 14 COPD patients (MIMIC-IV demo), aggregate comparison | Testing only |
 
@@ -131,14 +131,16 @@ The prototype fuses three data streams. The brief asks for two; we add the envir
 | Stream | What it contains | Source | Real or synthetic |
 |---|---|---|---|
 | Static: health record | Age, sex, COPD type, severity (GOLD stage), smoking, BMI, blood pressure, other conditions, inhaler regimen, home oxygen | [Synthea](https://github.com/synthetichealth/synthea) COPD module, 300 patients aged 52-92 | Synthetic |
-| Static: India overlay | 100 younger patients aged 30-51 (COPD starts earlier in India); city, cooking-smoke (biomass) exposure, bidi vs cigarette, flare-ups last year, blood eosinophils, SERPINA1 genetic marker, flu vaccination | Written by us | Synthetic, labelled |
+| Static: India overlay | 120 younger patients: 100 aged 30-51 (COPD starts earlier in India) and 20 aged 22-29, each with a documented early-onset cause (alpha-1 gene variant, lung damage after tuberculosis, or heavy cooking smoke since childhood); city, cooking-smoke (biomass) exposure, bidi vs cigarette, flare-ups last year, blood eosinophils, SERPINA1 genetic marker, flu vaccination | Written by us | Synthetic, labelled |
 | Dynamic: wearables | Daily resting heart rate, breathing rate, SpO2, steps, sleep, BP, rescue and controller inhaler use | Our simulator, calibrated to published studies | Synthetic |
 | Dynamic: environment | Daily PM2.5 and AQI for 8 cities | CPCB data via [Kaggle "Air Quality Data in India"](https://www.kaggle.com/datasets/rohanrao/air-quality-data-in-india) (CC0) | **Real** |
 | Dynamic: weather | Daily mean and minimum temperature, humidity | [Open-Meteo historical archive](https://open-meteo.com/) (CC BY 4.0) | **Real** |
 | Real-data check | 100 de-identified hospital patients, 14 with COPD | [MIMIC-IV Clinical Database Demo v2.2](https://physionet.org/content/mimic-iv-demo/2.2/) (ODbL 1.0) | **Real** |
 | Real-patient stress test | 100 de-identified ICU patients (55 women, 45 men, aged 18-90), 16 with COPD, 47,214 real vital-sign readings | [MIMIC-III Clinical Database Demo v1.4](https://physionet.org/content/mimiciii-demo/1.4/) (ODbL 1.0), extract in [`data/raw/mimic3_demo/`](data/raw/mimic3_demo/) | **Real** |
 
-**The cohort (400 patients).** Every adult generation is represented: 40 aged 30-39, 49 aged 40-49, 62 aged 50-59, 67 aged 60-69, 79 aged 70-79 and 103 aged 80+. Synthea's lung-function value alone would make two thirds of patients GOLD 4, so we keep Synthea's ordering of who is sicker but assign stages in typical clinic shares: GOLD 1/2/3/4 = 17% / 42% / 29% / 12%. 18% currently smoke and 31% are exposed to cooking smoke at home.
+**The cohort (420 patients).** Every adult generation is represented: 20 aged 22-29, 40 aged 30-39, 49 aged 40-49, 62 aged 50-59, 67 aged 60-69, 79 aged 70-79 and 103 aged 80+. Synthea's lung-function value alone would make two thirds of patients GOLD 4, so we keep Synthea's ordering of who is sicker but assign stages in typical clinic shares: GOLD 1/2/3/4 = 18% / 43% / 28% / 11%. 19% currently smoke and 32% are exposed to cooking smoke at home.
+
+**Why patients under 30.** COPD below 30 is uncommon, so a clinician would ask why a 24-year-old has it. Every under-30 patient therefore carries one documented early-onset cause: alpha-1 antitrypsin deficiency (SERPINA1 gene; Stoller and Aboussouan, Lancet 2005), lung damage after past tuberculosis, which is common in India (Byrne et al., Int J Infect Dis 2015), or heavy cooking smoke since childhood (Salvi and Barnes, Lancet 2009). The cause is shown on the patient's health record. The group size (20) and cause shares are our assumptions. These 20 patients were added with their own random seed, so the other 400 records are unchanged.
 
 Cities: Delhi, Lucknow, Patna, Kolkata, Mumbai, Hyderabad, Bengaluru, Chennai. Year replayed: March 2019 to February 2020 (a full set of seasons before the COVID-19 lockdown changed pollution). One India-wide model is trained across all eight cities; a patient from any other city is matched to the nearest monitored city.
 
@@ -173,21 +175,21 @@ Health-record factors are rescaled so each GOLD stage keeps its published averag
 - **Rule layer:** transparent checks against the patient's own normal, on both today's reading and the 3-day average, with thresholds set just inside the published average changes.
 - **Safety override:** a red-flag rule (oxygen below 90%) makes the patient Urgent and puts them at the top of the call list, whatever the model's probability. Rules catch emergencies; the model catches slow drift.
 - **Smog warnings:** the next 3 days of air quality and weather per city, using India's CPCB PM2.5 bands, with advice that gets stronger as air gets worse. In this demo the "forecast" is the real recorded data for those days of 2019-20; a live version would read an air-quality forecast.
-- **Validation:** patients split 70/30, so the model is tested on 120 people it never saw (280 used for training).
+- **Validation:** patients split 70/30, so the model is tested on 126 people it never saw (294 used for training).
 
 ### Results on held-out patients
 
 | Measure | Value |
 |---|---|
-| AUROC | 0.80 |
-| AUPRC | 0.24 (flare-up days are under 1% of days) |
-| Flare-ups warned 1 to 3 days ahead | 66% |
-| False alerts per patient per month | 0.80 |
+| AUROC | 0.815 |
+| AUPRC | 0.27 (flare-up days are under 1% of days) |
+| Flare-ups warned 1 to 3 days ahead | 67% |
+| False alerts per patient per month | 0.91 |
 | Published real-world range (AUROC) | 0.68 (Shah 2017) to 0.85 (Hurst 2010) |
 
 ![Model performance](outputs/model_performance.png)
 
-What each data stream adds (AUROC): health record alone 0.66, environment alone 0.45, wearables alone 0.79, wearables + health record 0.81, all three 0.80. The body signals carry the 3-day warning, and the health record sets each person's starting risk. Air and weather say little about *which 3 days* a given person will flare up, because their published effects are modest; their value is in *when* risk rises across a season, in the smog warnings and in the what-if advice.
+What each data stream adds (AUROC): health record alone 0.59, environment alone 0.57, wearables alone 0.818, wearables + health record 0.818, all three 0.815. The body signals carry the 3-day warning, and the health record sets each person's starting risk. Air and weather say little about *which 3 days* a given person will flare up, because their published effects are modest; their value is in *when* risk rises across a season, in the smog warnings and in the what-if advice.
 
 **These results come from simulated data.** They show the pipeline works and the model recovers the patterns the literature describes. They are not clinical accuracy.
 
@@ -202,12 +204,12 @@ The twin was trained only on simulated patients, so we fed it 100 real, de-ident
 | Check | Result |
 |---|---|
 | Robustness | 75 of 100 assessed (25 had under 48 h of vitals); 0 crashes, 0 invalid risks, including a missing oxygen sensor |
-| Signal direction | Risk rises with real worsening signs (rank correlation 0.71); in the edge-case suite, breathing at 35/min gives High risk and all three signs worse gives 96% |
-| Age and sex | Age 18 vs 90 and switching sex barely change risk (sex is not a model input). Women alerted 30%, men 19%; women also showed more warning signs |
+| Signal direction | Risk rises with real worsening signs (rank correlation 0.73); in the edge-case suite, breathing at 35/min gives High risk and all three signs worse gives 97% |
+| Age and sex | Age 18 vs 90 and switching sex barely change risk (sex is not a model input). Women alerted 30%, men 23%; women also showed more warning signs |
 | Like for like | With the same number of warning signs, women were alerted somewhat more often than men; groups are 5 to 19 people, so this needs a larger real cohort |
-| Realism | Real ICU patients breathe faster (median 19 vs 15.4/min) and often get extra oxygen (SpO2 98% vs 95.2%) than our simulated home cohort |
-| Found and fixed | An SpO2 drop alone barely moves the learned risk (oxygen at 82% scored 1.2%, Low). Fixed with the safety override: oxygen below 90% now makes the patient Urgent, and the same case now returns Urgent |
-| Limit | Risk did not predict later in-hospital death (AUROC 0.49); death in intensive care is a different event from a COPD flare-up at home |
+| Realism | Real ICU patients breathe faster (median 19 vs 15.5/min) and often get extra oxygen (SpO2 98% vs 95.3%) than our simulated home cohort |
+| Found and fixed | An SpO2 drop alone barely moves the learned risk (oxygen at 82% scored 2.0%, Low). Fixed with the safety override: oxygen below 90% now makes the patient Urgent, and the same case now returns Urgent |
+| Limit | Risk did not predict later in-hospital death (AUROC 0.51); death in intensive care is a different event from a COPD flare-up at home |
 
 This is a stress test of robustness, fairness and the direction of the signal on real people, not clinical validation.
 
