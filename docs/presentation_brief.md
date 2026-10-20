@@ -1,7 +1,7 @@
 # Presentation brief: BreatheTwin (Team MOMENTUM)
 
 Paste or upload this file into a new chat and ask: "Make a presentation deck from this brief."
-All numbers below are current as of 19 Oct 2026.
+All numbers below are current as of 20 Oct 2026. Demo video: https://youtu.be/l2pGZtYHCFM
 
 ## Competition and deliverable
 - Digital Twin Challenge 2026 by Happiest Health (on Unstop). Submission closes 20 Oct 2026, 7 PM IST.

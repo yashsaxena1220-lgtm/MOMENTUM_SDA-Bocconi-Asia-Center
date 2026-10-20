@@ -5,6 +5,8 @@ Submission to the **Digital Twin Challenge 2026** (Happiest Health, Reimagining 
 A digital twin of a COPD patient that learns the patient's own normal, watches their city's air pollution and weather, and warns 1 to 3 days before a likely flare-up, with the reasons, what could lower the risk, and plain advice for the family.
 
 **Try it live (no install needed): https://breathetwin.streamlit.app**
+
+**Watch the demo video (15 min): https://youtu.be/l2pGZtYHCFM**
 *(If the app has been idle, Streamlit may show a "wake up" button first; it takes about 30 seconds.)*
 
 ![One patient in detail](docs/screenshots/2_patient.png)
@@ -213,9 +215,39 @@ The twin was trained only on simulated patients, so we fed it 100 real, de-ident
 
 This is a stress test of robustness, fairness and the direction of the signal on real people, not clinical validation.
 
+### Test on a new patient (shown in the video)
+
+The model was also tested live on a person it had never seen, entered on the **Check a new person** page: a 23-year-old woman in Mumbai, GOLD 2, 3 flare-ups last year, never smoked, eosinophils 320 cells/µL, BMI 19, on a daily inhaler. Usual readings: heart rate 58, breathing 14/min, SpO2 99%, 4,000 steps, 2 rescue puffs, 7 h sleep. Last 3 days: 52, 18/min, 97%, 1,000 steps, 3 puffs, 6.5 h.
+
+| Test case | Result |
+|---|---|
+| Readings now = usual (default record, 64 yrs, Delhi) | Low, about 0.3% |
+| Breathing 16→22/min, SpO2 95→91%, rescue puffs 1→4 | High, about 99% |
+| 23-year-old test patient above | **High, about 28%**: breathing +4.2/min and SpO2 -2 points vs her own normal, far fewer steps, one extra rescue puff; under-30 caution shown |
+
+None of her readings is alarming against a textbook range (SpO2 97%), but against her own normal she is drifting. That is the point of a personal twin.
+
 ## Demo video
 
-> TODO: add unlisted YouTube link (15-20 minutes).
+[![BreatheTwin demo video](docs/video/thumbnail.png)](https://youtu.be/l2pGZtYHCFM)
+
+**https://youtu.be/l2pGZtYHCFM** (15 min 41 s, unlisted)
+
+| Time | Part |
+|---|---|
+| 0:00 | Opening and team |
+| 1:05 | The problem |
+| 2:26 | How the twin works |
+| 4:01 | Demo: the doctor's overview |
+| 5:37 | Demo: one patient in detail |
+| 7:23 | Demo: the safety override (oxygen below 90%) |
+| 8:20 | Demo: the what-if lab |
+| 9:18 | Demo: testing the model on a new patient |
+| 10:57 | Demo: devices and what the patient sees |
+| 12:07 | Evidence and honesty |
+| 14:20 | Pilot plan and close |
+
+The narration uses AI-generated voices. Full narration: [`docs/video/narration.md`](docs/video/narration.md); captions: [`docs/video/BreatheTwin_captions.en.srt`](docs/video/BreatheTwin_captions.en.srt). The video is rebuilt from this repo by the scripts in [`tools/video/`](tools/video/) (voice, screen recording of the dashboard, assembly).
 
 ## Architecture diagram
 
@@ -297,6 +329,8 @@ synthea/                  keep-file and exact Synthea command
 data/raw, data/processed  inputs and generated tables (data/raw/mimic3_demo: real de-identified patients, ODbL)
 outputs/                  metrics and charts
 docs/                     presentation, flowchart, architecture diagram, screenshots
+docs/video/               demo video thumbnail, captions and narration
+tools/video/              scripts that rebuild the demo video (voice, screen recording, assembly)
 ```
 
 ## Limitations

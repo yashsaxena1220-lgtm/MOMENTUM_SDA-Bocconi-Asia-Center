@@ -1,0 +1,735 @@
+1
+00:00:01,200 --> 00:00:04,767
+Imagine a 68-year-old man in Delhi. It's early November.
+
+2
+00:00:04,767 --> 00:00:09,098
+The smog has been bad for a week, and the nights are getting colder.
+
+3
+00:00:09,548 --> 00:00:14,158
+His breathing is a little faster than usual. His oxygen is a point lower.
+
+4
+00:00:14,158 --> 00:00:18,705
+He's reaching for his blue inhaler more often. None of it feels serious.
+
+5
+00:00:19,155 --> 00:00:22,906
+Three days later, he's in hospital with a COPD flare-up.
+
+6
+00:00:23,356 --> 00:00:24,883
+The warning signs were there.
+
+7
+00:00:24,883 --> 00:00:29,409
+But nobody was watching them, and nobody connected them with the air he was breathing.
+
+8
+00:00:29,859 --> 00:00:34,236
+Hi! We're team MOMENTUM. I'm Anushka Tomar, the team leader.
+
+9
+00:00:34,686 --> 00:00:41,073
+And I'm Yash Saxena. We're both MBA students at SDA Bocconi Asia Center in Mumbai.
+
+10
+00:00:41,523 --> 00:00:44,929
+This is BreatheTwin: a digital twin of a COPD patient.
+
+11
+00:00:44,929 --> 00:00:49,533
+It learns each person's own normal, watches their city's air and weather,
+
+12
+00:00:49,533 --> 00:00:52,875
+and warns one to three days before a likely flare-up.
+
+13
+00:00:52,875 --> 00:00:56,155
+And it tells you why, and what would lower the risk.
+
+14
+00:00:56,605 --> 00:01:00,713
+We'll walk you through the problem, how the twin works, and a live demo.
+
+15
+00:01:00,713 --> 00:01:04,423
+Then we'll be honest about what our results do, and don't, prove.
+
+16
+00:01:07,123 --> 00:01:11,284
+So, what is COPD? Chronic obstructive pulmonary disease.
+
+17
+00:01:11,284 --> 00:01:15,816
+It's a long-term lung disease that makes every breath harder.
+
+18
+00:01:15,816 --> 00:01:20,646
+In 2016, India had an estimated 55 million people living with it.
+
+19
+00:01:21,096 --> 00:01:25,668
+And here's what makes India different. The biggest causes aren't cigarettes.
+
+20
+00:01:25,668 --> 00:01:29,638
+Outdoor air pollution drives about a third of India's COPD burden.
+
+21
+00:01:29,638 --> 00:01:35,293
+Smoke from cooking with wood or dung drives another quarter. Both count for more than smoking.
+
+22
+00:01:35,743 --> 00:01:38,208
+The most dangerous moment is the flare-up:
+
+23
+00:01:38,208 --> 00:01:41,200
+a few days when breathing suddenly gets much worse.
+
+24
+00:01:41,200 --> 00:01:46,247
+Flare-ups put people in hospital, and each one can leave the lungs permanently weaker.
+
+25
+00:01:46,697 --> 00:01:50,338
+But here's the hopeful part. The body gives warning signs.
+
+26
+00:01:50,338 --> 00:01:56,867
+Breathing rises by about two breaths a minute two days before a flare-up, and about four the day before.
+
+27
+00:01:56,867 --> 00:02:02,140
+Oxygen dips. Heart rate climbs. People walk less, and use their rescue inhaler more.
+
+28
+00:02:02,590 --> 00:02:05,343
+The trouble is, these changes are tiny.
+
+29
+00:02:05,343 --> 00:02:10,495
+A family won't notice them, and nobody tracks them between clinic visits.
+
+30
+00:02:10,495 --> 00:02:16,777
+Nobody links them to the smog, either. In the year we replay, Delhi's PM2.5 averaged 104.
+
+31
+00:02:16,777 --> 00:02:19,882
+That's about seven times the WHO safe level.
+
+32
+00:02:20,332 --> 00:02:25,003
+So the opportunity is clear. Let's use the days of warning the body already gives us.
+
+33
+00:02:27,703 --> 00:02:33,419
+So how does it work? BreatheTwin brings together three streams of data for every patient.
+
+34
+00:02:33,869 --> 00:02:35,659
+One: the health record.
+
+35
+00:02:35,659 --> 00:02:42,585
+Age, how severe the COPD is, past flare-ups, smoking, cooking smoke at home, blood tests.
+
+36
+00:02:42,585 --> 00:02:45,542
+That sets each person's starting risk.
+
+37
+00:02:45,992 --> 00:02:49,898
+Two: daily readings from devices people can already buy.
+
+38
+00:02:49,898 --> 00:02:55,409
+A smartwatch, a fingertip pulse oximeter, and a clip-on sensor for the inhaler.
+
+39
+00:02:55,859 --> 00:02:58,956
+Three: the city's air quality and weather.
+
+40
+00:02:58,956 --> 00:03:06,696
+And this part is real data, from CPCB monitoring stations in eight Indian cities, and Open-Meteo weather.
+
+41
+00:03:07,146 --> 00:03:12,760
+Every morning, the twin compares today with the patient's own normal from the past month.
+
+42
+00:03:12,760 --> 00:03:14,968
+Not a textbook range. Their normal.
+
+43
+00:03:14,968 --> 00:03:20,646
+Because a breathing rate of 18 can be fine for one person, and a warning sign for another.
+
+44
+00:03:21,096 --> 00:03:23,189
+The risk engine is a hybrid.
+
+45
+00:03:23,189 --> 00:03:29,994
+A machine-learning model, LightGBM, learns the patterns in the body signals and the record.
+
+46
+00:03:29,994 --> 00:03:33,583
+For air pollution, we don't let the model guess.
+
+47
+00:03:33,583 --> 00:03:37,247
+We use the effect from a published meta-analysis:
+
+48
+00:03:37,247 --> 00:03:41,809
+about 2.5 percent more risk for every 10 micrograms of PM2.5.
+
+49
+00:03:42,259 --> 00:03:48,937
+Then it decides. High: call the patient today. Medium: watch closely. Low: no action.
+
+50
+00:03:48,937 --> 00:03:51,294
+And on top sits a safety rule.
+
+51
+00:03:51,294 --> 00:03:57,657
+If oxygen falls below 90 percent, the patient is Urgent, whatever the model says.
+
+52
+00:03:57,657 --> 00:04:00,172
+We'll show you that in a minute.
+
+53
+00:04:02,872 --> 00:04:09,547
+Okay, let's open the dashboard. This is what a doctor or a community health worker sees each morning.
+
+54
+00:04:09,547 --> 00:04:15,761
+We're replaying a real year of Indian air and weather, and today is the 5th of November, 2019.
+
+55
+00:04:15,761 --> 00:04:17,678
+Winter smog is just starting.
+
+56
+00:04:18,140 --> 00:04:23,493
+Every page starts with a short guide, because we wrote this for people without medical training too.
+
+57
+00:04:23,980 --> 00:04:32,933
+Across 420 patients in eight cities, 18 are high risk today. And Patna has the worst air: PM2.5 of 248.
+
+58
+00:04:32,933 --> 00:04:34,411
+That's very poor.
+
+59
+00:04:34,907 --> 00:04:41,054
+The map shows the same picture by city. Bigger bubble, more high-risk patients. The colour is today's air.
+
+60
+00:04:41,537 --> 00:04:46,824
+But this is the part a doctor will use most: who to call today, ranked by risk.
+
+61
+00:04:46,824 --> 00:04:49,902
+Mohan Gowda, 92, in Lucknow, is at 94 percent.
+
+62
+00:04:49,902 --> 00:04:53,850
+His breathing is 3.3 breaths a minute above his own normal.
+
+63
+00:04:53,850 --> 00:04:57,931
+So before picking up the phone, the doctor already knows why.
+
+64
+00:04:58,388 --> 00:05:00,078
+You can filter by age.
+
+65
+00:05:00,078 --> 00:05:07,224
+Our patients range from 22 to 92, and every patient under 30 has a known cause of early COPD,
+
+66
+00:05:07,224 --> 00:05:12,141
+like an alpha-1 gene variant, or lung damage after tuberculosis.
+
+67
+00:05:12,610 --> 00:05:16,755
+Further down: smog and cold warnings for the next three days.
+
+68
+00:05:16,755 --> 00:05:23,756
+Lucknow, Patna and Delhi expect very poor air this week. So the advice is practical. Keep windows shut.
+
+69
+00:05:23,756 --> 00:05:27,290
+Wear an N95 outdoors. Keep the rescue inhaler close.
+
+70
+00:05:27,754 --> 00:05:30,655
+And this chart shows why air matters across a season.
+
+71
+00:05:30,655 --> 00:05:35,745
+As pollution climbs into winter, the number of high-risk patients climbs right along with it.
+
+72
+00:05:38,904 --> 00:05:43,883
+Let's open one patient from that list. Vimala Pillai, 91, from Delhi.
+
+73
+00:05:44,355 --> 00:05:51,635
+This dial is her chance of a flare-up in the next three days. 46.5 percent. Yesterday, it was under 3.
+
+74
+00:05:51,635 --> 00:05:58,416
+The black mark is the alert line, and she's well past it. The twin's advice: contact her today.
+
+75
+00:05:58,896 --> 00:06:04,111
+Why? Look at her readings against her own normal. Breathing:
+
+76
+00:06:04,111 --> 00:06:11,585
+17.8 breaths a minute, that's 3.4 above her usual. Resting heart rate: 9 beats higher.
+
+77
+00:06:11,585 --> 00:06:16,626
+And she walked about 1,900 steps, against her usual 3,100.
+
+78
+00:06:17,125 --> 00:06:23,757
+These checks are simple rules a doctor can verify at a glance. Breathing up. Heart rate up.
+
+79
+00:06:23,757 --> 00:06:28,786
+And she's taken only 64 percent of her daily inhaler doses this week.
+
+80
+00:06:29,244 --> 00:06:36,315
+So what would help? Staying indoors with an air purifier brings her risk from 47 down to 40 percent.
+
+81
+00:06:36,315 --> 00:06:42,891
+Taking every inhaler dose barely moves it today, because the warning signs are already there.
+
+82
+00:06:42,891 --> 00:06:46,214
+We'd rather say that honestly than overpromise.
+
+83
+00:06:46,700 --> 00:06:53,051
+This is her health record, the fixed part of the twin. GOLD stage 2. One flare-up last year.
+
+84
+00:06:53,051 --> 00:06:59,609
+A former bidi smoker. Cooking smoke at home. High eosinophils. Plus diabetes and heart disease.
+
+85
+00:06:59,609 --> 00:07:04,579
+Together, that nearly doubles her risk compared with an average patient.
+
+86
+00:07:05,075 --> 00:07:10,465
+And this chart breaks the risk into its causes. Red pushes it up, green pushes it down.
+
+87
+00:07:10,465 --> 00:07:13,006
+Today, the biggest push is her breathing.
+
+88
+00:07:13,472 --> 00:07:18,892
+Finally, the family can download a one-page visit summary and take it to the doctor.
+
+89
+00:07:18,892 --> 00:07:21,473
+Readings, reasons, and questions to ask.
+
+90
+00:07:24,651 --> 00:07:29,904
+Now, a case that shows why the model doesn't get the last word.
+
+91
+00:07:29,904 --> 00:07:36,407
+Sunita Ansari, 30, from Delhi, with severe COPD. It's the 27th of March, 2019.
+
+92
+00:07:36,893 --> 00:07:44,553
+The machine-learning model gives her less than 1 percent risk. On its own, that means: do nothing.
+
+93
+00:07:44,553 --> 00:07:51,040
+But look at her oxygen this morning. 89.9 percent. In COPD, below 90 is a red flag.
+
+94
+00:07:51,540 --> 00:07:53,267
+So the safety rule steps in.
+
+95
+00:07:53,267 --> 00:07:58,202
+She's marked Urgent, and she goes straight to the top of the doctor's call list,
+
+96
+00:07:58,202 --> 00:08:00,115
+with the reason in plain words.
+
+97
+00:08:00,606 --> 00:08:03,647
+And honestly? We found this gap ourselves.
+
+98
+00:08:03,647 --> 00:08:07,775
+When we stress-tested the twin on real hospital patients,
+
+99
+00:08:07,775 --> 00:08:15,740
+someone with oxygen at 82 percent still came out Low. We didn't hide it. We fixed it. Rules catch emergencies.
+
+100
+00:08:15,740 --> 00:08:18,999
+The model catches the slow drift before them.
+
+101
+00:08:22,174 --> 00:08:28,012
+This is the what-if lab. A doctor, or a worried family member, can ask questions here safely.
+
+102
+00:08:28,012 --> 00:08:30,021
+Nothing changes the real record.
+
+103
+00:08:30,491 --> 00:08:36,146
+What if Vimala's readings went back to her normal, and she took every dose? Watch the dial.
+
+104
+00:08:36,146 --> 00:08:37,575
+Her risk drops sharply.
+
+105
+00:08:38,042 --> 00:08:42,057
+And what if Delhi had a week of severe smog instead? The risk goes up.
+
+106
+00:08:42,057 --> 00:08:45,441
+That's the published pollution effect at work, not a guess.
+
+107
+00:08:45,907 --> 00:08:47,627
+A cold snap pushes it up too.
+
+108
+00:08:49,383 --> 00:08:51,785
+You can change the health record as well.
+
+109
+00:08:51,785 --> 00:08:56,883
+Higher eosinophils, a blood marker, mean more frequent flare-ups. So the risk edges up.
+
+110
+00:09:02,084 --> 00:09:08,651
+These curves change one thing at a time. The dot is where she is today. And they show the rules we built in:
+
+111
+00:09:08,651 --> 00:09:13,638
+warning signs never lower the risk, and taking more inhaler doses never raises it.
+
+112
+00:09:13,638 --> 00:09:16,800
+So every answer moves the way a doctor would expect.
+
+113
+00:09:19,972 --> 00:09:23,734
+Now let's test the model live, on a patient it has never seen.
+
+114
+00:09:23,734 --> 00:09:26,525
+This page builds a new twin in about a minute.
+
+115
+00:09:26,987 --> 00:09:34,959
+Our test patient is a 23-year-old woman in Mumbai. GOLD stage 2. Three flare-ups last year.
+
+116
+00:09:34,959 --> 00:09:42,143
+She's never smoked. Eosinophils of 320, a BMI of 19, and she's on a daily inhaler.
+
+117
+00:09:42,639 --> 00:09:44,019
+Now her readings.
+
+118
+00:09:44,019 --> 00:09:52,542
+Usually, she breathes 14 times a minute, her oxygen is 99 percent, and she walks about 4,000 steps a day.
+
+119
+00:09:52,542 --> 00:09:54,571
+Over the last three days:
+
+120
+00:09:54,571 --> 00:10:02,607
+18 breaths a minute, oxygen at 97, only a thousand steps, and one extra puff of her rescue inhaler.
+
+121
+00:10:03,068 --> 00:10:11,004
+Honestly, none of those numbers looks alarming on its own. Her oxygen is still 97. So, what does the twin say?
+
+122
+00:10:11,460 --> 00:10:18,115
+High risk. About a 28 percent chance of a flare-up in the next three days. And it explains why.
+
+123
+00:10:18,115 --> 00:10:23,789
+Her breathing is 4 breaths above her own normal. Her oxygen is 2 points below it.
+
+124
+00:10:23,789 --> 00:10:28,132
+She's hardly walking, and she's using her rescue inhaler more.
+
+125
+00:10:28,622 --> 00:10:31,410
+That's the whole point of a personal twin.
+
+126
+00:10:31,410 --> 00:10:36,720
+Compared with a textbook, she looks fine. Compared with herself, she's drifting.
+
+127
+00:10:36,720 --> 00:10:42,495
+The twin also flags that COPD is rare under 30, so a doctor reads the result with care.
+
+128
+00:10:42,976 --> 00:10:50,373
+We ran other tests too. Readings at her normal give about 0.3 percent. Strong warning signs give 99.
+
+129
+00:10:50,373 --> 00:10:55,477
+And this table shows every value the twin used, so nothing is hidden.
+
+130
+00:10:58,631 --> 00:11:02,211
+So what does the patient actually wear? Nothing unusual.
+
+131
+00:11:02,211 --> 00:11:05,343
+No needle, no blood test, nothing under the skin.
+
+132
+00:11:05,343 --> 00:11:09,178
+Just a smartwatch, a fingertip oximeter, or an inhaler clip.
+
+133
+00:11:09,672 --> 00:11:15,089
+Here's what they'd see. These are design mock-ups, filled with a real patient's twin output.
+
+134
+00:11:15,089 --> 00:11:17,385
+The watch shows today's risk as a ring.
+
+135
+00:11:17,385 --> 00:11:23,096
+The phone app, My lungs today, says it in plain words, and shows the air for the next three days.
+
+136
+00:11:23,587 --> 00:11:29,137
+For a high-risk patient, the watch gives one clear message. Your rescue inhaler use is up.
+
+137
+00:11:29,137 --> 00:11:32,344
+A flare-up may be coming. Your doctor has been told.
+
+138
+00:11:32,806 --> 00:11:37,265
+And if oxygen drops below 90? Simply: call your doctor now.
+
+139
+00:11:37,721 --> 00:11:42,608
+There are three kits. The minimum is any smartwatch plus a fingertip oximeter.
+
+140
+00:11:42,608 --> 00:11:48,121
+The full kit adds a smart inhaler clip, like ADHERO from Lupin and Aptar, sold in India.
+
+141
+00:11:48,121 --> 00:11:54,136
+And for families who can't afford a watch, there's a no-watch kit: just a phone and an oximeter.
+
+142
+00:11:54,602 --> 00:11:58,855
+To be clear: in this prototype, readings are simulated or typed in.
+
+143
+00:11:58,855 --> 00:12:05,075
+These device connections are our integration plan, using each platform's published data interface.
+
+144
+00:12:08,252 --> 00:12:11,495
+Now, the honest part. What's real, and what isn't?
+
+145
+00:12:11,990 --> 00:12:17,433
+All the air quality and weather data is real. The training patients are synthetic.
+
+146
+00:12:17,433 --> 00:12:23,607
+The health records come from Synthea, an open-source generator of synthetic hospital records,
+
+147
+00:12:23,607 --> 00:12:26,396
+plus 120 younger Indian patients we added.
+
+148
+00:12:26,396 --> 00:12:30,445
+The watch readings and flare-ups come from our own simulator,
+
+149
+00:12:30,445 --> 00:12:36,486
+and every effect size in it comes from a published study, or is labelled as our assumption.
+
+150
+00:12:36,949 --> 00:12:37,873
+Why simulate?
+
+151
+00:12:37,873 --> 00:12:45,053
+Because we couldn't find any open dataset of COPD patients with wearable data and labelled flare-ups.
+
+152
+00:12:45,053 --> 00:12:48,323
+That's the honest gap, and it's our next step.
+
+153
+00:12:48,798 --> 00:12:55,067
+On 126 patients the model never saw, the accuracy score, AUROC, is 0.815.
+
+154
+00:12:55,067 --> 00:13:00,218
+Published real-world COPD tools score between 0.68 and 0.85.
+
+155
+00:13:00,218 --> 00:13:06,487
+The twin warned of two in every three flare-ups, one to three days ahead,
+
+156
+00:13:06,487 --> 00:13:14,644
+with less than one false alert per patient per month. But remember: the patients are simulated.
+
+157
+00:13:14,644 --> 00:13:19,967
+So this proves the pipeline works. It's not clinical accuracy.
+
+158
+00:13:20,420 --> 00:13:26,108
+The chart also shows where the signal comes from. Wearables alone score 0.82.
+
+159
+00:13:26,108 --> 00:13:33,125
+Air and weather alone, only 0.57. Air can't tell you which three days one person will flare up.
+
+160
+00:13:33,125 --> 00:13:40,364
+It tells you when risk rises across a city and a season, and that's what powers the smog warnings.
+
+161
+00:13:40,830 --> 00:13:44,015
+We also tested the twin on real people:
+
+162
+00:13:44,015 --> 00:13:50,877
+100 de-identified hospital patients from the open MIMIC-III database, aged 18 to 90.
+
+163
+00:13:50,877 --> 00:13:55,206
+It scored all 75 with enough data, with zero crashes.
+
+164
+00:13:55,206 --> 00:14:01,496
+And its risk rose with real worsening signs, with a rank correlation of 0.73.
+
+165
+00:14:01,961 --> 00:14:09,309
+And the limits? It didn't predict death in intensive care, which is a different event from a flare-up at home.
+
+166
+00:14:09,309 --> 00:14:16,657
+Real hospital patients are sicker than our synthetic ones. And the groups are small. So this is a stress test.
+
+167
+00:14:16,657 --> 00:14:18,260
+Not clinical validation.
+
+168
+00:14:21,417 --> 00:14:26,094
+So who does this help? The doctor gets a ranked list of who to call, and why.
+
+169
+00:14:26,094 --> 00:14:31,560
+The community health worker can follow hundreds of patients and visit the few who need it.
+
+170
+00:14:31,560 --> 00:14:35,265
+The family gets early warning, and plain advice on smog days.
+
+171
+00:14:35,715 --> 00:14:37,606
+Here's our plan, in three phases.
+
+172
+00:14:38,056 --> 00:14:39,120
+First, validate.
+
+173
+00:14:39,120 --> 00:14:45,703
+We want to partner with a pulmonology clinic and follow real COPD patients through one smog season.
+
+174
+00:14:45,703 --> 00:14:52,751
+The test is simple: how many flare-ups does the twin catch early, and how many false alarms does it raise?
+
+175
+00:14:53,201 --> 00:14:54,770
+Second, the patient app.
+
+176
+00:14:54,770 --> 00:15:00,656
+A daily check-in that works with just a phone and an oximeter, alerts on SMS and WhatsApp,
+
+177
+00:15:00,656 --> 00:15:02,814
+and Hindi and regional languages.
+
+178
+00:15:03,264 --> 00:15:04,306
+And third, scale.
+
+179
+00:15:04,306 --> 00:15:10,622
+Live air-quality forecasts, links to ABHA health records, and rollout through community health workers.
+
+180
+00:15:11,072 --> 00:15:16,001
+One last thing. We're two MBA students, and neither of us writes code.
+
+181
+00:15:16,001 --> 00:15:23,042
+We built BreatheTwin with an AI assistant, and put our effort into the questions a clinic would ask.
+
+182
+00:15:23,042 --> 00:15:29,942
+Is it safe? Is it honest about its data? Would a doctor actually use it? And it's all open source.
+
+183
+00:15:30,392 --> 00:15:34,394
+BreatheTwin. Early warning, easier breathing. Thank you!
+
+184
+00:15:34,844 --> 00:15:39,128
+Thank you! The live demo and the code are linked in our submission.
